@@ -239,9 +239,9 @@ In case of a security incident:
 
 ## 📞 Contact Information
 
-- **Security Email:** security@keynest.dev
-- **General Support:** support@keynest.dev
-- **Website:** https://keynest.dev
+- **Security Email:** gychitresh1280@gmail.com
+- **General Support:** gychitresh1280@gmail.com
+- **Website:** Currently not deployed
 
 ---
 
