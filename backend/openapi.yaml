@@ -1,0 +1,1444 @@
+openapi: 3.0.3
+info:
+  title: KeyNest API
+  version: 1.0.0
+  description: |
+    KeyNest is a production-ready developer tool for securely storing, managing, and sharing 
+    environment (.env) files across projects and platforms. This API provides comprehensive 
+    environment variable management with enterprise-grade security.
+    
+    ## Features
+    - **AES-256 Encryption**: All sensitive data encrypted at rest
+    - **Role-Based Access Control**: Admin, Editor, and Viewer roles
+    - **Multi-Format Import/Export**: Support for .env, JSON, and YAML formats
+    - **Audit Logging**: Complete activity tracking for compliance
+    - **Team Collaboration**: Organization-based access control
+    
+    ## Authentication
+    All authenticated endpoints require a Bearer token in the Authorization header:
+    ```
+    Authorization: Token your-auth-token
+    ```
+    
+    ## Rate Limiting
+    - Anonymous users: 100 requests/hour
+    - Authenticated users: 1000 requests/hour
+    - Authentication endpoints: 5 attempts/minute
+    
+  contact:
+    name: KeyNest Support
+    email: support@keynest.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.keynest.com
+    description: Production server
+
+paths:
+  # Health Check
+  /health/:
+    get:
+      tags:
+        - System
+      summary: Health check endpoint
+      description: Returns the health status of the API service
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: KeyNest API
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  # API Root
+  /api/:
+    get:
+      tags:
+        - System
+      summary: API root information
+      description: Returns available API endpoints and version information
+      operationId: apiRoot
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Welcome to KeyNest API
+                  version:
+                    type: string
+                    example: 1.0.0
+                  endpoints:
+                    type: object
+
+  # Authentication Endpoints
+  /api/auth/register/:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Register a new user account and create a personal organization
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '400':
+          description: Invalid registration data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login/:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return access token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/logout/:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Logout user by invalidating their token
+      operationId: logoutUser
+      security:
+        - TokenAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '400':
+          description: Error logging out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/profile/:
+    get:
+      tags:
+        - Authentication
+      summary: Get user profile
+      description: Get current user profile information
+      operationId: getUserProfile
+      security:
+        - TokenAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  # Organizations
+  /api/organizations/:
+    get:
+      tags:
+        - Organizations
+      summary: List organizations
+      description: List all organizations where the user is a member
+      operationId: listOrganizations
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+
+    post:
+      tags:
+        - Organizations
+      summary: Create organization
+      description: Create a new organization and become its admin
+      operationId: createOrganization
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreate'
+      responses:
+        '201':
+          description: Organization created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+
+  /api/organizations/{id}/:
+    get:
+      tags:
+        - Organizations
+      summary: Get organization
+      description: Get organization details by ID
+      operationId: getOrganization
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Organizations
+      summary: Update organization
+      description: Update organization details (admin/editor only)
+      operationId: updateOrganization
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdate'
+      responses:
+        '200':
+          description: Organization updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Organizations
+      summary: Delete organization
+      description: Delete organization (admin only)
+      operationId: deleteOrganization
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Organization deleted successfully
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Projects
+  /api/projects/:
+    get:
+      tags:
+        - Projects
+      summary: List projects
+      description: List all projects in user's accessible organizations
+      operationId: listProjects
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: organization
+          in: query
+          description: Filter by organization ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectList'
+
+    post:
+      tags:
+        - Projects
+      summary: Create project
+      description: Create a new project in an organization
+      operationId: createProject
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  /api/projects/{id}/:
+    get:
+      tags:
+        - Projects
+      summary: Get project
+      description: Get project details by ID
+      operationId: getProject
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+    put:
+      tags:
+        - Projects
+      summary: Update project
+      description: Update project details (admin/editor only)
+      operationId: updateProject
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+    delete:
+      tags:
+        - Projects
+      summary: Delete project
+      description: Delete project (admin only)
+      operationId: deleteProject
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Project deleted successfully
+
+  # Environments
+  /api/environments/:
+    get:
+      tags:
+        - Environments
+      summary: List environments
+      description: List all environments in user's accessible projects
+      operationId: listEnvironments
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: project
+          in: query
+          description: Filter by project ID
+          schema:
+            type: integer
+        - name: environment_type
+          in: query
+          description: Filter by environment type
+          schema:
+            type: string
+            enum: [development, staging, production, testing]
+      responses:
+        '200':
+          description: List of environments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEnvironmentList'
+
+    post:
+      tags:
+        - Environments
+      summary: Create environment
+      description: Create a new environment in a project
+      operationId: createEnvironment
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentCreate'
+      responses:
+        '201':
+          description: Environment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+
+  /api/environments/{id}/:
+    get:
+      tags:
+        - Environments
+      summary: Get environment
+      description: Get environment details by ID
+      operationId: getEnvironment
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Environment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+
+    put:
+      tags:
+        - Environments
+      summary: Update environment
+      description: Update environment details (admin/editor only)
+      operationId: updateEnvironment
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentUpdate'
+      responses:
+        '200':
+          description: Environment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+
+    delete:
+      tags:
+        - Environments
+      summary: Delete environment
+      description: Delete environment (admin only)
+      operationId: deleteEnvironment
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Environment deleted successfully
+
+  # Environment Variables
+  /api/variables/:
+    get:
+      tags:
+        - Variables
+      summary: List environment variables
+      description: List all environment variables in user's accessible environments
+      operationId: listVariables
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: environment
+          in: query
+          description: Filter by environment ID
+          schema:
+            type: integer
+        - name: key
+          in: query
+          description: Filter by variable key (partial match)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of environment variables
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVariableList'
+
+    post:
+      tags:
+        - Variables
+      summary: Create environment variable
+      description: Create a new environment variable
+      operationId: createVariable
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariableCreate'
+      responses:
+        '201':
+          description: Variable created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variable'
+
+  /api/variables/{id}/:
+    get:
+      tags:
+        - Variables
+      summary: Get environment variable
+      description: Get environment variable details by ID
+      operationId: getVariable
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Variable details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variable'
+
+    put:
+      tags:
+        - Variables
+      summary: Update environment variable
+      description: Update environment variable (admin/editor only)
+      operationId: updateVariable
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariableUpdate'
+      responses:
+        '200':
+          description: Variable updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variable'
+
+    delete:
+      tags:
+        - Variables
+      summary: Delete environment variable
+      description: Delete environment variable (admin/editor only)
+      operationId: deleteVariable
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Variable deleted successfully
+
+  # Import/Export
+  /api/environments/{id}/export/:
+    get:
+      tags:
+        - Import/Export
+      summary: Export environment variables
+      description: |
+        Export environment variables in various formats (.env, JSON, YAML).
+        The exported file will be downloaded with appropriate headers.
+      operationId: exportEnvironment
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Environment ID
+          schema:
+            type: integer
+        - name: format
+          in: query
+          description: Export format
+          schema:
+            type: string
+            enum: [env, json, yaml]
+            default: env
+      responses:
+        '200':
+          description: Environment variables exported successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: .env file content
+              example: |
+                DATABASE_URL=postgresql://localhost/db
+                SECRET_KEY=my-secret-key
+                DEBUG=false
+            application/json:
+              schema:
+                type: object
+                description: JSON format export
+                example:
+                  DATABASE_URL: postgresql://localhost/db
+                  SECRET_KEY: my-secret-key
+                  DEBUG: false
+            application/x-yaml:
+              schema:
+                type: string
+                description: YAML format export
+              example: |
+                DATABASE_URL: postgresql://localhost/db
+                SECRET_KEY: my-secret-key
+                DEBUG: false
+          headers:
+            Content-Disposition:
+              description: Attachment filename
+              schema:
+                type: string
+                example: 'attachment; filename="project_production.env"'
+            X-Decryption-Warnings:
+              description: List of variables that failed decryption
+              schema:
+                type: string
+                example: 'Failed to decrypt: SECRET_KEY, API_TOKEN'
+        '400':
+          description: Invalid format specified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Environment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/environments/{id}/import/:
+    post:
+      tags:
+        - Import/Export
+      summary: Import environment variables
+      description: |
+        Import environment variables from file upload or raw data.
+        Supports .env, JSON, and YAML formats with conflict resolution.
+      operationId: importEnvironment
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Environment ID
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Environment file to upload (max 10MB)
+                overwrite:
+                  type: boolean
+                  default: false
+                  description: Whether to overwrite existing variables
+            examples:
+              file_upload:
+                summary: File upload example
+                value:
+                  file: "@path/to/your/file.env"
+                  overwrite: true
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  description: Raw data content
+                format:
+                  type: string
+                  enum: [env, json, yaml, auto]
+                  default: env
+                  description: Data format (auto-detect if not specified)
+                overwrite:
+                  type: boolean
+                  default: false
+                  description: Whether to overwrite existing variables
+              required:
+                - data
+            examples:
+              env_data:
+                summary: Import .env data
+                value:
+                  data: "DATABASE_URL=postgresql://localhost/db\nSECRET_KEY=my-secret"
+                  format: env
+                  overwrite: true
+              json_data:
+                summary: Import JSON data
+                value:
+                  data: '{"DATABASE_URL":"postgresql://localhost/db","SECRET_KEY":"my-secret"}'
+                  format: json
+                  overwrite: false
+      responses:
+        '200':
+          description: Import completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponse'
+        '400':
+          description: Invalid import data or format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflicting variables found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportConflictError'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Audit Logs
+  /api/audit-logs/:
+    get:
+      tags:
+        - Audit
+      summary: List audit logs
+      description: List audit logs for accessible organizations (admin/editor only)
+      operationId: listAuditLogs
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: action
+          in: query
+          description: Filter by action type
+          schema:
+            type: string
+            enum: [create, update, delete, view, export, import]
+        - name: target_type
+          in: query
+          description: Filter by target type
+          schema:
+            type: string
+            enum: [user, organization, project, environment, variable]
+        - name: user
+          in: query
+          description: Filter by user ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token authentication using format "Token your-token-here"
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      description: Resource ID
+      schema:
+        type: integer
+
+    PageParam:
+      name: page
+      in: query
+      description: Page number
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PageSizeParam:
+      name: page_size
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    # Base Models
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+          description: Computed full name or username
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_active:
+          type: boolean
+          readOnly: true
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        member_count:
+          type: integer
+          readOnly: true
+        project_count:
+          type: integer
+          readOnly: true
+        user_role:
+          type: string
+          enum: [admin, editor, viewer]
+          readOnly: true
+          nullable: true
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        organization:
+          type: integer
+        organization_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_name:
+          type: string
+          readOnly: true
+        environment_count:
+          type: integer
+          readOnly: true
+
+    Environment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        project:
+          type: integer
+        project_name:
+          type: string
+          readOnly: true
+        environment_type:
+          type: string
+          enum: [development, staging, production, testing]
+          default: development
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_name:
+          type: string
+          readOnly: true
+        variable_count:
+          type: integer
+          readOnly: true
+
+    Variable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        key:
+          type: string
+          maxLength: 255
+          pattern: '^[A-Z][A-Z0-9_]*$'
+        value:
+          type: string
+          writeOnly: true
+          description: Plain text value (will be encrypted)
+        decrypted_value:
+          type: string
+          readOnly: true
+          description: Decrypted value (role-based access)
+        environment:
+          type: integer
+        environment_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_name:
+          type: string
+          readOnly: true
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_name:
+          type: string
+          readOnly: true
+        user_email:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          enum: [create, update, delete, view, export, import]
+        target_type:
+          type: string
+        target_id:
+          type: string
+        details:
+          type: object
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+
+    # Request/Response Models
+    UserRegistration:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 150
+          pattern: '^[a-zA-Z0-9_]+$'
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        confirm_password:
+          type: string
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          maxLength: 128
+
+    RegistrationResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        organization:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        organizations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              role:
+                type: string
+                enum: [admin, editor, viewer]
+
+    OrganizationCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+
+    OrganizationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+
+    ProjectCreate:
+      type: object
+      required:
+        - name
+        - organization
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+          pattern: '^[a-zA-Z0-9\s\-_\.]+$'
+        description:
+          type: string
+        organization:
+          type: integer
+
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+          pattern: '^[a-zA-Z0-9\s\-_\.]+$'
+        description:
+          type: string
+
+    EnvironmentCreate:
+      type: object
+      required:
+        - name
+        - project
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\-_]+$'
+        project:
+          type: integer
+        environment_type:
+          type: string
+          enum: [development, staging, production, testing]
+          default: development
+        description:
+          type: string
+
+    EnvironmentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\-_]+$'
+        environment_type:
+          type: string
+          enum: [development, staging, production, testing]
+        description:
+          type: string
+
+    VariableCreate:
+      type: object
+      required:
+        - key
+        - environment
+      properties:
+        key:
+          type: string
+          pattern: '^[A-Z][A-Z0-9_]*$'
+          description: Environment variable key in UPPER_CASE format
+        value:
+          type: string
+          description: Variable value (will be encrypted)
+        environment:
+          type: integer
+
+    VariableUpdate:
+      type: object
+      properties:
+        key:
+          type: string
+          pattern: '^[A-Z][A-Z0-9_]*$'
+        value:
+          type: string
+
+    ImportResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        summary:
+          type: object
+          properties:
+            imported:
+              type: integer
+              description: Number of new variables imported
+            updated:
+              type: integer
+              description: Number of existing variables updated
+            failed:
+              type: integer
+              description: Number of variables that failed to import
+            total_variables:
+              type: integer
+              description: Total variables processed
+        failed_imports:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              error:
+                type: string
+          nullable: true
+
+    ImportConflictError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Conflicting variables found
+        conflicts:
+          type: array
+          items:
+            type: string
+          description: List of variable keys that conflict
+        message:
+          type: string
+          example: Set overwrite=true to replace existing variables
+
+    # Pagination
+    PaginatedOrganizationList:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+
+    PaginatedProjectList:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+
+    PaginatedEnvironmentList:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Environment'
+
+    PaginatedVariableList:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variable'
+
+    PaginatedAuditLogList:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+
+    # Common Models
+    SuccessMessage:
+      type: object
+      properties:
+        message:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          oneOf:
+            - type: string
+            - type: object
+            - type: array
+          nullable: true
+
+tags:
+  - name: System
+    description: System health and information endpoints
+  - name: Authentication
+    description: User authentication and profile management
+  - name: Organizations
+    description: Organization management and team collaboration
+  - name: Projects
+    description: Project management within organizations
+  - name: Environments
+    description: Environment management (dev, staging, prod)
+  - name: Variables
+    description: Environment variable management with encryption
+  - name: Import/Export
+    description: Import and export environment variables in multiple formats
+  - name: Audit
+    description: Audit logs and activity tracking
