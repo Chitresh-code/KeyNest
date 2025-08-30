@@ -19,7 +19,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.prod   # ⚡ switch to your prod Dockerfile
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       - DEBUG=False
