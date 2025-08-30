@@ -47,7 +47,7 @@ jobs:
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
-        ssh $EC2_HOST << 'DEPLOY_SCRIPT'
+        ssh -o SendEnv=DATABASE_URL $EC2_HOST "DATABASE_URL=$DATABASE_URL /home/ubuntu/KeyNest/backend/scripts/deploy.sh"
         set -e
         
         echo "🚀 Starting deployment..."

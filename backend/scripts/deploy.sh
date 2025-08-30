@@ -36,13 +36,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Pick compose file
-if [ -n "${DATABASE_URL:-}" ]; then
-    COMPOSE_FILE="docker-compose.prod.yml"
-    log "Using production configuration with external database"
-else
-    COMPOSE_FILE="docker-compose.dev.yml"
-    log "Using development configuration with local database"
-fi
+COMPOSE_FILE="docker-compose.prod.yml"
+log "Using production configuration"
 
 # === FUNCTIONS ===
 
