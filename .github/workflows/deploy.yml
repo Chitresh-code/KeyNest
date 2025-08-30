@@ -1,4 +1,4 @@
-name: Deploy KeyNest Backend to EC2
+name: EC2
 
 on:
   push:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy to EC2
+    name: Deploy
     runs-on: ubuntu-latest
     
     steps:
