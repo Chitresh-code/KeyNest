@@ -14,6 +14,7 @@ Thank you for your interest in contributing to KeyNest! We welcome contributions
 ### Setting up your development environment
 
 1. **Fork the repository**
+
    ```bash
    # Click the "Fork" button on GitHub, then clone your fork
    git clone https://github.com/your-username/keynest.git
@@ -21,12 +22,14 @@ Thank you for your interest in contributing to KeyNest! We welcome contributions
    ```
 
 2. **Set up the backend**
+
    ```bash
    cd backend
    docker compose -f docker-compose.dev.yml up -d
    ```
 
 3. **Set up the frontend**
+
    ```bash
    cd ../frontend
    npm install
@@ -34,9 +37,9 @@ Thank you for your interest in contributing to KeyNest! We welcome contributions
    ```
 
 4. **Verify everything works**
-   - Backend API: http://localhost:8001
-   - Frontend: http://localhost:3000
-   - API Health: http://localhost:8001/health/
+   - Backend API: [http://localhost:8001](http://localhost:8001)
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - API Health: [http://localhost:8001/health/](http://localhost:8001/health/)
 
 ## 📋 How to Contribute
 
@@ -75,14 +78,16 @@ git checkout -b fix/issue-description
 
 #### Code Style Guidelines
 
-**Backend (Python/Django)**
+##### Backend (Python/Django)
+
 - Follow **PEP 8** style guidelines
 - Use **type hints** where appropriate
 - Write **docstrings** for functions and classes
 - Keep functions small and focused
 - Use **meaningful variable names**
 
-**Frontend (TypeScript/React)**
+##### Frontend (TypeScript/React)
+
 - Use **TypeScript** for all new code
 - Follow **React best practices**
 - Use **functional components** with hooks
@@ -93,7 +98,7 @@ git checkout -b fix/issue-description
 
 We use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-```
+```text
 type(scope): short description
 
 Longer description if needed
@@ -102,6 +107,7 @@ Fixes #123
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -111,6 +117,7 @@ Fixes #123
 - `chore`: Build process or auxiliary tool changes
 
 **Examples:**
+
 ```bash
 feat(auth): add two-factor authentication
 fix(api): resolve variable encryption issue
@@ -155,6 +162,7 @@ npm run build
 ### 4. Submit a Pull Request
 
 1. **Push your branch**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -302,7 +310,7 @@ Mockups, examples, or other context.
 
 ### Backend Structure
 
-```
+```text
 backend/
 ├── authentication/    # User auth & JWT
 ├── core/             # Main business logic
@@ -316,7 +324,7 @@ backend/
 
 ### Frontend Structure
 
-```
+```text
 frontend/
 ├── src/app/          # Next.js pages
 ├── src/components/   # React components
@@ -331,7 +339,7 @@ frontend/
 
 **Do not** open public issues for security vulnerabilities. Instead:
 
-1. **Email us** at security@keynest.dev
+1. **Email us** at [security@keynest.dev](mailto:security@keynest.dev)
 2. **Include details** about the vulnerability
 3. **Wait for acknowledgment** before public disclosure
 
@@ -363,8 +371,8 @@ Contributors will be:
 ### Maintainer Contact
 
 - **General questions** - Open a discussion
-- **Security issues** - security@keynest.dev
-- **Partnership inquiries** - partners@keynest.dev
+- **Security issues** - [security@keynest.dev](mailto:security@keynest.dev)
+- **Partnership inquiries** - [partners@keynest.dev](mailto:partners@keynest.dev)
 
 ## 📜 Code of Conduct
 
@@ -386,6 +394,6 @@ Contributors will be:
 
 Project maintainers are responsible for clarifying standards and will take appropriate action in response to unacceptable behavior.
 
----
+## 🙏 Thank You
 
 Thank you for contributing to KeyNest! Together, we're building a more secure way to manage environment variables. 🚀

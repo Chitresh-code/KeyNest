@@ -54,7 +54,7 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading projects...</p>
+          <p className="text-gray-600 dark:text-muted-foreground">Loading projects...</p>
         </div>
       </div>
     );
@@ -65,8 +65,8 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">Projects</h1>
+          <p className="text-gray-600 dark:text-muted-foreground">
             Manage your projects and their environments
           </p>
         </div>
@@ -92,10 +92,10 @@ export default function ProjectsPage() {
         <Card>
           <CardContent className="text-center py-12">
             <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">
               {searchTerm ? 'No projects found' : 'No projects yet'}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-muted-foreground mb-4">
               {searchTerm 
                 ? 'Try adjusting your search terms'
                 : 'Get started by creating your first project'
@@ -152,21 +152,21 @@ export default function ProjectsPage() {
               <CardContent className="pt-0">
                 <div className="space-y-3">
                   {/* Organization */}
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-gray-600 dark:text-muted-foreground">
                     <Users className="h-4 w-4 mr-2" />
                     {project.organization_name}
                   </div>
 
                   {/* Environment Count */}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Environments</span>
+                    <span className="text-gray-600 dark:text-muted-foreground">Environments</span>
                     <Badge variant="secondary">
                       {project.environment_count}
                     </Badge>
                   </div>
 
                   {/* Created Info */}
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     Created {formatDistanceToNow(new Date(project.created_at))} ago
                     {project.created_by_name && (
                       <span> by {project.created_by_name}</span>

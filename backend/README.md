@@ -5,6 +5,7 @@ KeyNest is a production-ready developer tool for securely storing, managing, and
 ## 🚀 Features
 
 ### 🔑 Core Features
+
 - **Secure Environment Management**: AES-256 encrypted storage of environment variables
 - **Team Collaboration**: Organization-based access control with role management
 - **Multi-Environment Support**: Separate configurations for dev, staging, and production
@@ -15,6 +16,7 @@ KeyNest is a production-ready developer tool for securely storing, managing, and
 - **Audit Logging**: Complete activity tracking for compliance and security
 
 ### 🛡️ Security Features
+
 - **Encryption at Rest**: All sensitive data encrypted with Fernet (AES-256)
 - **Role-Based Access Control**: Admin, Editor, and Viewer roles
 - **Rate Limiting**: Protection against brute force and DDoS attacks
@@ -24,6 +26,7 @@ KeyNest is a production-ready developer tool for securely storing, managing, and
 - **CORS Protection**: Configurable cross-origin resource sharing
 
 ### 🏗️ Production Ready
+
 - **Scalable Architecture**: Built with Django REST Framework
 - **Database Agnostic**: Supports PostgreSQL, MySQL, SQLite
 - **Comprehensive Logging**: Structured logging with security focus
@@ -61,7 +64,8 @@ docker-compose -f docker-compose.dev.yml logs -f api
 ```
 
 **Services available:**
-- **API**: http://localhost:8001 
+
+- **API**: <http://localhost:8001>
 - **Database**: localhost:5433 (keynest_dev/keynest_dev/dev_password)
 - **Redis**: localhost:6380
 
@@ -81,9 +85,10 @@ docker-compose -f docker-compose.dev.yml --profile admin --profile mail up -d
 ```
 
 **Additional services:**
-- **PgAdmin**: http://localhost:8080 (admin@keynest.dev/admin123)
-- **Redis Commander**: http://localhost:8081
-- **MailHog**: http://localhost:8025 (email testing)
+
+- **PgAdmin**: <http://localhost:8080> (<admin@keynest.dev>/admin123)
+- **Redis Commander**: <http://localhost:8081>
+- **MailHog**: <http://localhost:8025> (email testing)
 
 ### Manual Installation (Alternative)
 
@@ -198,11 +203,13 @@ THROTTLE_AUTH=5/min
 ### Database Configuration
 
 #### PostgreSQL (Recommended for Production)
+
 ```bash
 DATABASE_URL=postgresql://username:password@host:port/database
 ```
 
 #### SQLite (Development)
+
 ```bash
 DATABASE_URL=sqlite:///db.sqlite3
 ```
@@ -210,20 +217,23 @@ DATABASE_URL=sqlite:///db.sqlite3
 ## 📚 API Documentation
 
 ### Base URL
-```
+
+```bash
 http://localhost:8000/api/
 ```
 
 ### Authentication
 
 All authenticated endpoints require an `Authorization` header:
-```
+
+```bash
 Authorization: Token your-auth-token
 ```
 
 ### Core Endpoints
 
-#### Authentication
+#### Authentication Endpoints
+
 ```bash
 POST /api/auth/register/     # User registration
 POST /api/auth/login/        # User login
@@ -232,6 +242,7 @@ GET  /api/auth/profile/      # Get user profile
 ```
 
 #### Organizations
+
 ```bash
 GET    /api/organizations/           # List organizations
 POST   /api/organizations/           # Create organization
@@ -241,6 +252,7 @@ DELETE /api/organizations/{id}/      # Delete organization
 ```
 
 #### Projects
+
 ```bash
 GET    /api/projects/                # List projects
 POST   /api/projects/                # Create project
@@ -250,6 +262,7 @@ DELETE /api/projects/{id}/           # Delete project
 ```
 
 #### Environments
+
 ```bash
 GET    /api/environments/            # List environments
 POST   /api/environments/            # Create environment
@@ -260,7 +273,8 @@ GET    /api/environments/{id}/export/ # Export .env file
 POST   /api/environments/{id}/import/ # Import .env file
 ```
 
-#### Environment Variables
+#### Environment Variable Endpoints
+
 ```bash
 GET    /api/variables/               # List variables
 POST   /api/variables/               # Create variable
@@ -270,6 +284,7 @@ DELETE /api/variables/{id}/          # Delete variable
 ```
 
 #### Audit Logs
+
 ```bash
 GET /api/audit-logs/                 # List audit logs
 ```
@@ -277,6 +292,7 @@ GET /api/audit-logs/                 # List audit logs
 ### Example Requests
 
 #### Register User
+
 ```bash
 curl -X POST http://localhost:8000/api/auth/register/ \
   -H "Content-Type: application/json" \
@@ -290,6 +306,7 @@ curl -X POST http://localhost:8000/api/auth/register/ \
 ```
 
 #### Create Project
+
 ```bash
 curl -X POST http://localhost:8000/api/projects/ \
   -H "Content-Type: application/json" \
@@ -302,6 +319,7 @@ curl -X POST http://localhost:8000/api/projects/ \
 ```
 
 #### Export Environment
+
 ```bash
 # Export as .env file (default)
 curl -X GET http://localhost:8000/api/environments/1/export/ \
@@ -317,6 +335,7 @@ curl -X GET http://localhost:8000/api/environments/1/export/?format=yaml \
 ```
 
 #### Import Environment Variables
+
 ```bash
 # Import from file upload
 curl -X POST http://localhost:8000/api/environments/1/import/ \
@@ -359,7 +378,8 @@ curl -X POST http://localhost:8000/api/environments/1/import/ \
 - **AuditLog**: Complete activity tracking
 
 ### Relationships
-```
+
+```bash
 Organization (1) --> (*) Project
 Project (1) --> (*) Environment  
 Environment (1) --> (*) EnvVariable
@@ -369,21 +389,25 @@ User (*) --> (*) Organization (through OrganizationMembership)
 ## 🔒 Security
 
 ### Encryption
+
 - **Algorithm**: AES-256 via Fernet
 - **Key Management**: Environment-based key storage
 - **Data Protection**: All sensitive values encrypted at rest
 
 ### Access Control
+
 - **Admin**: Full organization access
 - **Editor**: Read/write access to projects and environments
 - **Viewer**: Read-only access
 
 ### Rate Limiting
+
 - Anonymous users: 100 requests/hour
 - Authenticated users: 1000 requests/hour
 - Authentication endpoints: 5 attempts/minute
 
 ### Security Headers
+
 ```python
 # Automatically configured
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -394,16 +418,19 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 ## 📊 Monitoring & Logging
 
-### Health Check
+### Health Check Endpoint
+
 ```bash
 GET /health/
 ```
 
 ### Log Files
+
 - `logs/keynest.log` - Application logs
 - `logs/security.log` - Security events
 
 ### Log Levels
+
 ```python
 LOGGING = {
     'loggers': {
@@ -485,6 +512,7 @@ python test_examples.py
 ```
 
 The `test_examples.py` script provides:
+
 - **User Registration & Authentication** testing
 - **Organization, Project, Environment** management testing
 - **Environment Variable** CRUD operations testing
@@ -496,6 +524,7 @@ The `test_examples.py` script provides:
 ### Manual Testing Examples
 
 #### Test Import/Export Flow
+
 ```bash
 # 1. Register and login
 curl -X POST http://localhost:8000/api/auth/register/ \
@@ -530,6 +559,7 @@ curl -X GET http://localhost:8000/api/environments/1/export/?format=json \
 ```
 
 ### Test Data
+
 ```bash
 # Create superuser for admin access
 python manage.py createsuperuser
@@ -543,6 +573,7 @@ python manage.py loaddata fixtures/sample_data.json
 ### Production Checklist
 
 1. **Environment Configuration**
+
    ```bash
    DEBUG=False
    SECURE_SSL_REDIRECT=True
@@ -594,6 +625,7 @@ curl http://localhost:8000/health/
 #### Production Architecture
 
 The production setup includes:
+
 - **PostgreSQL**: Production database with connection pooling
 - **Redis**: Caching and session storage
 - **Nginx**: Reverse proxy with SSL termination and static files
@@ -622,6 +654,7 @@ docker-compose --profile monitoring up -d
 For detailed deployment instructions, see [docker-deployment.md](docker-deployment.md).
 
 ### Environment Variables for Production
+
 ```bash
 # Required
 SECRET_KEY=production-secret-key
@@ -644,7 +677,8 @@ CACHE_LOCATION=redis://redis:6379/1
 ## 🤝 Development
 
 ### Project Structure
-```
+
+```bash
 backend/
 ├── KeyNest/           # Django project settings
 │   ├── settings.py    # Main configuration
@@ -665,12 +699,14 @@ backend/
 ```
 
 ### Code Style
+
 - Follow PEP 8
 - Use type hints where applicable
 - Comprehensive docstrings
 - 100% test coverage for critical paths
 
 ### Contributing
+
 1. Fork the repository
 2. Create feature branch
 3. Write tests
@@ -682,12 +718,14 @@ backend/
 ### Common Issues
 
 #### Database Connection Error
+
 ```bash
 # Check database credentials and connectivity
 python manage.py dbshell
 ```
 
 #### Encryption/Decryption Errors
+
 ```bash
 # Verify ENCRYPTION_KEY is set correctly
 python manage.py shell
@@ -696,6 +734,7 @@ python manage.py shell
 ```
 
 #### Migration Issues
+
 ```bash
 # Reset migrations (development only)
 python manage.py migrate core zero
@@ -704,6 +743,7 @@ python manage.py migrate
 ```
 
 #### Performance Issues
+
 ```bash
 # Check database queries
 python manage.py shell
@@ -712,6 +752,7 @@ python manage.py shell
 ```
 
 ### Debug Mode
+
 ```bash
 # Enable debug mode (development only)
 DEBUG=True python manage.py runserver --settings=KeyNest.settings
@@ -725,15 +766,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: [API Docs](http://localhost:8000/api/)
 - **Issues**: [GitHub Issues](https://github.com/your-org/keynest/issues)
-- **Email**: support@keynest.com
+- **Email**: <support@keynest.com>
 
 ## 🔄 Changelog
 
 ### v1.0.0 (Current)
+
 - Initial release
 - Core environment management
 - User authentication and authorization
 - Organization and project management
 - Import/export functionality
 - Comprehensive security features
-- Production-ready deployment
+- Production-ready deploymen

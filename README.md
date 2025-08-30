@@ -1,6 +1,6 @@
 # KeyNest 🔐
 
-**Secure Environment Variable Management for Teams**
+Secure Environment Variable Management for Teams
 
 KeyNest is a modern, open-source platform for managing environment variables across different projects and environments. Built with security-first principles, it provides encrypted storage, team collaboration, and seamless integration with your development workflow.
 
@@ -8,28 +8,32 @@ KeyNest is a modern, open-source platform for managing environment variables acr
 
 ## ✨ Features
 
-### 🔒 **Security First**
+### 🔒 Security First
+
 - **AES-256 Encryption**: All environment variables are encrypted at rest
 - **Role-Based Access Control**: Admin, Editor, and Viewer roles
 - **JWT Authentication**: Secure token-based authentication
 - **Audit Logging**: Complete audit trail of all changes
 - **CSRF & CORS Protection**: Enterprise-grade security measures
 
-### 🏢 **Team Collaboration**
+### 🏢 Team Collaboration
+
 - **Organizations**: Organize teams and projects
 - **Project Management**: Group environments by project
 - **Environment Types**: Development, staging, production, testing
 - **Permission Management**: Fine-grained access control
 - **Activity Tracking**: See who changed what and when
 
-### 🚀 **Developer Experience**
+### 🚀 Developer Experience
+
 - **Import/Export**: Seamless .env file integration
 - **Search & Filter**: Quickly find variables across projects
 - **Copy to Clipboard**: Easy value access with security controls
 - **Responsive UI**: Works on desktop and mobile
 - **Real-time Updates**: Live synchronization across team members
 
-### 📊 **Management & Monitoring**
+### 📊 Management & Monitoring
+
 - **Dashboard Analytics**: Project and environment statistics
 - **Variable Tracking**: Monitor variable usage and changes
 - **Team Management**: Add/remove team members with proper roles
@@ -37,7 +41,7 @@ KeyNest is a modern, open-source platform for managing environment variables acr
 
 ## 🏗 Architecture
 
-```
+```text
 KeyNest/
 ├── backend/          # Django REST API
 │   ├── authentication/  # User auth & JWT tokens
@@ -64,18 +68,21 @@ KeyNest/
 ### Option 1: Docker (Recommended)
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Chitresh-code/KeyNest.git
    cd keynest
    ```
 
 2. **Start the backend services**
+
    ```bash
    cd backend
    docker compose -f docker-compose.dev.yml up -d
    ```
 
 3. **Start the frontend**
+
    ```bash
    cd ../frontend
    npm install
@@ -83,27 +90,30 @@ KeyNest/
    ```
 
 4. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8001
-   - API Docs: http://localhost:8001/api/
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - Backend API: [http://localhost:8001](http://localhost:8001)
+   - API Docs: [http://localhost:8001/api/](http://localhost:8001/api/)
 
 ### Option 2: Local Development
 
 #### Backend Setup
 
 1. **Install dependencies**
+
    ```bash
    cd backend
    pip install -r requirements.txt
    ```
 
 2. **Configure environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your database and Redis configurations
    ```
 
 3. **Run migrations and start server**
+
    ```bash
    python manage.py migrate
    python manage.py createsuperuser
@@ -113,18 +123,21 @@ KeyNest/
 #### Frontend Setup
 
 1. **Install dependencies**
+
    ```bash
    cd frontend
    npm install
    ```
 
 2. **Configure environment**
+
    ```bash
    cp .env.local.example .env.local
    # Edit .env.local with your API URL
    ```
 
 3. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -132,17 +145,20 @@ KeyNest/
 ## 📖 Documentation
 
 ### For Users
+
 - [Getting Started Guide](docs/getting-started.md)
 - [User Manual](docs/user-guide.md)
 - [Security Best Practices](docs/security.md)
 
 ### For Developers
+
 - [API Documentation](docs/api.md)
 - [Frontend Development](frontend/README.md)
 - [Backend Development](backend/README.md)
 - [Contributing Guide](CONTRIBUTING.md)
 
 ### For Administrators
+
 - [Deployment Guide](docs/deployment.md)
 - [Configuration Reference](docs/configuration.md)
 - [Backup & Recovery](docs/backup.md)
@@ -150,6 +166,7 @@ KeyNest/
 ## 🛠 Technology Stack
 
 ### Backend
+
 - **Django 4.2** - Web framework
 - **Django REST Framework** - API framework
 - **PostgreSQL** - Primary database
@@ -158,6 +175,7 @@ KeyNest/
 - **Docker** - Containerization
 
 ### Frontend
+
 - **Next.js 14** - React framework with App Router
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Styling
@@ -174,12 +192,15 @@ We welcome contributions from the community! Please see our [Contributing Guide]
 
 1. **Fork the repository**
 2. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
+
 3. **Make your changes**
 4. **Add tests** for your changes
 5. **Run the test suite**
+
    ```bash
    # Backend tests
    cd backend && python manage.py test
@@ -187,9 +208,11 @@ We welcome contributions from the community! Please see our [Contributing Guide]
    # Frontend tests
    cd frontend && npm test
    ```
+
 6. **Submit a pull request**
 
 ### Code Standards
+
 - Follow existing code style and conventions
 - Write tests for new functionality
 - Update documentation for user-facing changes
@@ -229,8 +252,10 @@ KeyNest can be deployed using Docker or traditional hosting:
 
 See our [Deployment Guide](docs/deployment.md) for detailed instructions.
 
----
+## 🌟 Contributors
 
-**Made with ❤️ by the KeyNest community**
+Made with ❤️ by the KeyNest community
+
+## 🔗 Links
 
 [Website](https://chitresh.in) • [Documentation](https://key-nest-iota.vercel.app) • [GitHub](https://github.com/Chitresh-code/KeyNest)

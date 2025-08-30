@@ -50,12 +50,12 @@ export default function LoginPage() {
   const isLoading = isSubmitting || loginMutation.isPending;
 
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+    <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-gray-900">
+        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
           Welcome back
         </CardTitle>
-        <CardDescription className="text-gray-600">
+        <CardDescription className="text-gray-600 dark:text-gray-300">
           Sign in to your KeyNest account to manage your environment variables securely.
         </CardDescription>
       </CardHeader>
@@ -64,43 +64,43 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email Field */}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Email address
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 id="email"
                 type="email"
                 placeholder="your@email.com"
-                className="pl-9 bg-white/50"
+                className="pl-9 bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('email')}
                 disabled={isLoading}
               />
             </div>
             {errors.email && (
-              <p className="text-sm text-red-600">{errors.email.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
             )}
           </div>
 
           {/* Password Field */}
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Password
             </Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
-                className="pl-9 pr-9 bg-white/50"
+                className="pl-9 pr-9 bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('password')}
                 disabled={isLoading}
               />
               <button
                 type="button"
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
               >
@@ -112,7 +112,7 @@ export default function LoginPage() {
               </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-red-600">{errors.password.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
             )}
           </div>
 
@@ -120,7 +120,7 @@ export default function LoginPage() {
           <div className="flex justify-end">
             <Link
               href="/auth/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
             >
               Forgot your password?
             </Link>
@@ -143,12 +143,12 @@ export default function LoginPage() {
           </Button>
 
           {/* Register Link */}
-          <div className="text-center pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
+          <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Don&apos;t have an account?{' '}
               <Link
                 href="/register"
-                className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
                 Sign up for free
               </Link>

@@ -1,5 +1,7 @@
 # Getting Started with KeyNest
 
+[Docs Home](index.md)
+
 Welcome to KeyNest! This guide will help you get up and running with secure environment variable management in just a few minutes.
 
 ## 🚀 Quick Setup
@@ -126,6 +128,10 @@ Your first organization will be created automatically!
    - **Key**: `DATABASE_URL`
    - **Value**: `postgresql://user:pass@localhost/myapp_dev`
 4. Click **"Create Variable"**
+
+---
+
+Previous: index.md | Next: user-guide.md
 
 ## 🔑 Key Concepts
 

@@ -19,7 +19,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 Instead, please:
 
-1. **Email us** at gychitresh1280@gmail.com
+1. **Email us** at <gychitresh1280@gmail.com>
 2. **Include the following information:**
    - Description of the vulnerability
    - Steps to reproduce the issue
@@ -239,8 +239,8 @@ In case of a security incident:
 
 ## 📞 Contact Information
 
-- **Security Email:** gychitresh1280@gmail.com
-- **General Support:** gychitresh1280@gmail.com
+- **Security Email:** <gychitresh1280@gmail.com>
+- **General Support:** <gychitresh1280@gmail.com>
 - **Website:** Currently not deployed
 
 ---

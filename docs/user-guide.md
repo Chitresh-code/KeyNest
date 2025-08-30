@@ -1,5 +1,7 @@
 # KeyNest User Guide
 
+[Docs Home](index.md)
+
 This comprehensive guide covers all features and functionality of KeyNest, from basic usage to advanced team collaboration.
 
 ## 📋 Table of Contents
@@ -610,3 +612,7 @@ We love hearing from our users! Please share:
 ---
 
 **Happy secret managing!** 🔐✨
+
+---
+
+Previous: getting-started.md | Next: api.md

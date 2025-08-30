@@ -13,10 +13,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-foreground mb-2">
           Welcome to KeyNest, {user?.first_name || user?.username}!
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-muted-foreground">
           You&apos;ve successfully authenticated. This is your secure dashboard where you can
           manage your environment variables and collaborate with your team.
         </p>
@@ -36,7 +36,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-muted-foreground">
                 Create and organize projects to manage environment variables across different applications.
               </p>
               <div className="flex space-x-2">
@@ -69,15 +69,15 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium text-gray-700">Username</label>
-                <p className="text-gray-900">{user?.username}</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Username</label>
+                <p className="text-gray-900 dark:text-foreground">{user?.username}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Email</label>
-                <p className="text-gray-900">{user?.email}</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Email</label>
+                <p className="text-gray-900 dark:text-foreground">{user?.email}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Status</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Status</label>
                 <p className="text-green-600 font-medium">
                   {user?.is_active ? 'Active' : 'Inactive'}
                 </p>
@@ -101,8 +101,8 @@ export default function DashboardPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Create Projects</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Create Projects</h4>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">
                     Organize your applications into projects for better management
                   </p>
                 </div>
@@ -110,8 +110,8 @@ export default function DashboardPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Manage Environments</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Manage Environments</h4>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">
                     Create development, staging, and production environments
                   </p>
                 </div>
@@ -119,8 +119,8 @@ export default function DashboardPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Store Variables Securely</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Store Variables Securely</h4>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">
                     All your environment variables are encrypted and secure
                   </p>
                 </div>
@@ -130,8 +130,8 @@ export default function DashboardPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Team Collaboration</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Team Collaboration</h4>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">
                     Share projects with team members with role-based access
                   </p>
                 </div>
@@ -139,8 +139,8 @@ export default function DashboardPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Import & Export</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Import & Export</h4>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">
                     Easily import from .env files or export for deployment
                   </p>
                 </div>
@@ -148,8 +148,8 @@ export default function DashboardPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                 <div>
-                  <h4 className="font-medium text-gray-900">Audit Logs</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Audit Logs</h4>
+                  <p className="text-sm text-gray-600 dark:text-muted-foreground">
                     Track all changes with comprehensive audit logging
                   </p>
                 </div>

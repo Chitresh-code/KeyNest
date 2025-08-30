@@ -78,7 +78,7 @@ const complianceStandards = [
 
 export default function Security() {
   return (
-    <section id="security" className="py-20 bg-white">
+    <section id="security" className="py-20 bg-white dark:bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
@@ -91,14 +91,14 @@ export default function Security() {
             <Badge variant="secondary" className="px-4 py-2 mb-4 bg-red-100 text-red-700">
               Enterprise Security
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-foreground mb-6">
               Security is our
               <br />
               <span className="bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
                 top priority
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-muted-foreground max-w-3xl mx-auto">
               KeyNest implements multiple layers of security to protect your sensitive
               environment variables. From encryption to access control, we've got you covered.
             </p>
@@ -115,24 +115,24 @@ export default function Security() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Card className="h-full hover:shadow-lg transition-shadow duration-300">
+              <Card className="h-full hover:shadow-lg transition-shadow duration-300 bg-white dark:bg-card border-gray-200 dark:border-border">
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
-                      <div className="p-3 bg-red-100 rounded-lg">
-                        <feature.icon className="h-6 w-6 text-red-600" />
+                      <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                        <feature.icon className="h-6 w-6 text-red-600 dark:text-red-400" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 leading-tight">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground mb-2 leading-tight">
                         {feature.title}
                       </h3>
-                      <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                      <p className="text-gray-600 dark:text-muted-foreground mb-4 text-sm leading-relaxed">
                         {feature.description}
                       </p>
                       <div className="space-y-1">
                         {feature.details.map((detail, idx) => (
-                          <div key={idx} className="flex items-center text-sm text-gray-500">
+                          <div key={idx} className="flex items-center text-sm text-gray-500 dark:text-muted-foreground">
                             <div className="w-1 h-1 bg-red-600 rounded-full mr-2 flex-shrink-0"></div>
                             <span>{detail}</span>
                           </div>
@@ -152,13 +152,13 @@ export default function Security() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
           viewport={{ once: true }}
-          className="bg-gray-50 rounded-2xl p-8"
+          className="bg-gray-50 dark:bg-card rounded-2xl p-8"
         >
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-4">
               Built for Compliance
             </h3>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-muted-foreground max-w-2xl mx-auto">
               KeyNest is designed to meet industry standards and regulations,
               making it easy for your organization to maintain compliance.
             </p>
@@ -172,15 +172,15 @@ export default function Security() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="text-center p-6 bg-white rounded-lg border border-gray-200"
+                className="text-center p-6 bg-white dark:bg-background rounded-lg border border-gray-200 dark:border-border"
               >
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg mb-4">
-                  <standard.icon className="h-6 w-6 text-gray-600" />
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4">
+                  <standard.icon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-foreground mb-2">
                   {standard.name}
                 </h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-muted-foreground">
                   {standard.description}
                 </p>
               </motion.div>
@@ -188,12 +188,12 @@ export default function Security() {
           </div>
 
           <div className="text-center mt-8">
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">
               Want to learn more about our security practices?
             </p>
             <a
               href="#docs"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+              className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             >
               Read Security Documentation →
             </a>

@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, Github, Twitter, Linkedin, Mail, Globe, Code } from 'lucide-react';
+import { Github, Twitter, Linkedin, Mail, Globe, Code } from 'lucide-react';
 import { APP_CONFIG } from '@/lib/constants';
+import { Logo } from '@/components/ui/logo';
 
 const navigation = {
   product: [
@@ -66,15 +67,13 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-4">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Shield className="h-5 w-5 text-white" />
-              </div>
+              <Logo size="xl" variant="dark" />
               <span className="text-xl font-bold">{APP_CONFIG.name}</span>
             </Link>
             <p className="text-gray-400 mb-6 max-w-sm">

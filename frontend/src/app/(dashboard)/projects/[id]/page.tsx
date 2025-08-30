@@ -73,7 +73,7 @@ export default function ProjectDetailPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading project...</p>
+          <p className="text-gray-600 dark:text-muted-foreground">Loading project...</p>
         </div>
       </div>
     );
@@ -82,8 +82,8 @@ export default function ProjectDetailPage() {
   if (!project) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-lg font-medium text-gray-900 mb-2">Project not found</h2>
-        <p className="text-gray-600 mb-4">The project you're looking for doesn't exist or you don't have access to it.</p>
+        <h2 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">Project not found</h2>
+        <p className="text-gray-600 dark:text-muted-foreground mb-4">The project you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.</p>
         <Link href="/projects">
           <Button>Back to Projects</Button>
         </Link>
@@ -104,8 +104,8 @@ export default function ProjectDetailPage() {
           Back
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-          <p className="text-gray-600">{project.description || 'No description'}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">{project.name}</h1>
+          <p className="text-gray-600 dark:text-muted-foreground">{project.description || 'No description'}</p>
         </div>
       </div>
 
@@ -114,22 +114,22 @@ export default function ProjectDetailPage() {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">Organization</label>
-              <p className="text-gray-900">{project.organization_name}</p>
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Organization</label>
+              <p className="text-gray-900 dark:text-foreground">{project.organization_name}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Environments</label>
-              <p className="text-gray-900">{project.environment_count}</p>
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Environments</label>
+              <p className="text-gray-900 dark:text-foreground">{project.environment_count}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Created</label>
-              <p className="text-gray-900">
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Created</label>
+              <p className="text-gray-900 dark:text-foreground">
                 {formatDistanceToNow(new Date(project.created_at))} ago
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Created By</label>
-              <p className="text-gray-900">{project.created_by_name}</p>
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Created By</label>
+              <p className="text-gray-900 dark:text-foreground">{project.created_by_name}</p>
             </div>
           </div>
         </CardContent>
@@ -139,8 +139,8 @@ export default function ProjectDetailPage() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Environments</h2>
-            <p className="text-gray-600">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground">Environments</h2>
+            <p className="text-gray-600 dark:text-muted-foreground">
               Manage different environments for this project
             </p>
           </div>
@@ -165,16 +165,16 @@ export default function ProjectDetailPage() {
         {environmentsLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">Loading environments...</span>
+            <span className="ml-2 text-gray-600 dark:text-muted-foreground">Loading environments...</span>
           </div>
         ) : filteredEnvironments.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">
                 {searchTerm ? 'No environments found' : 'No environments yet'}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-muted-foreground mb-4">
                 {searchTerm 
                   ? 'Try adjusting your search terms'
                   : 'Create your first environment to start managing variables'
@@ -198,7 +198,7 @@ export default function ProjectDetailPage() {
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <IconComponent className="h-4 w-4 text-gray-600" />
+                          <IconComponent className="h-4 w-4 text-gray-600 dark:text-muted-foreground" />
                           <CardTitle className="text-lg truncate">
                             {environment.name}
                           </CardTitle>
@@ -237,21 +237,21 @@ export default function ProjectDetailPage() {
                     <div className="space-y-3">
                       {/* Description */}
                       {environment.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                        <p className="text-sm text-gray-600 dark:text-muted-foreground line-clamp-2">
                           {environment.description}
                         </p>
                       )}
 
                       {/* Variable Count */}
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Variables</span>
+                        <span className="text-gray-600 dark:text-muted-foreground">Variables</span>
                         <Badge variant="secondary">
                           {environment.variable_count}
                         </Badge>
                       </div>
 
                       {/* Created Info */}
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         Created {formatDistanceToNow(new Date(environment.created_at))} ago
                       </div>
 

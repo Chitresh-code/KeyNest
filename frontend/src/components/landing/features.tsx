@@ -133,7 +133,7 @@ const getCategoryColor = (category: string) => {
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 bg-gray-50">
+    <section id="features" className="py-20 mt-8 bg-gray-50 dark:bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
@@ -146,14 +146,14 @@ export default function Features() {
             <Badge variant="secondary" className="px-4 py-2 mb-4 bg-blue-100 text-blue-700">
               Powerful Features
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-foreground mb-6">
               Everything you need for
               <br />
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 secure environment management
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-muted-foreground max-w-3xl mx-auto">
               KeyNest provides enterprise-grade security, team collaboration, and powerful
               integrations to streamline your development workflow while keeping your secrets safe.
             </p>
@@ -170,7 +170,7 @@ export default function Features() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-0 bg-white/60 backdrop-blur-sm">
+              <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-0 bg-white/60 dark:bg-card/60 backdrop-blur-sm">
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
@@ -180,7 +180,7 @@ export default function Features() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900 leading-tight">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground leading-tight">
                           {feature.title}
                         </h3>
                         <Badge
@@ -190,12 +190,12 @@ export default function Features() {
                           {feature.category}
                         </Badge>
                       </div>
-                      <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                      <p className="text-gray-600 dark:text-muted-foreground mb-4 text-sm leading-relaxed">
                         {feature.description}
                       </p>
                       <div className="space-y-1">
                         {feature.highlights.map((highlight, idx) => (
-                          <div key={idx} className="flex items-center text-sm text-gray-500">
+                          <div key={idx} className="flex items-center text-sm text-gray-500 dark:text-muted-foreground">
                             <div className="w-1 h-1 bg-blue-600 rounded-full mr-2 flex-shrink-0"></div>
                             <span>{highlight}</span>
                           </div>
@@ -217,11 +217,11 @@ export default function Features() {
           viewport={{ once: true }}
           className="text-center mt-16"
         >
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-gray-200">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-border">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-4">
               Ready to secure your environment variables?
             </h3>
-            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-muted-foreground mb-6 max-w-2xl mx-auto">
               Join thousands of developers and teams who trust KeyNest to keep their secrets
               safe while enabling seamless collaboration.
             </p>
@@ -234,7 +234,7 @@ export default function Features() {
               </a>
               <a
                 href="#docs"
-                className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-border text-gray-700 dark:text-foreground font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-accent transition-colors"
               >
                 View Documentation
               </a>

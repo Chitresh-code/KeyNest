@@ -1,32 +1,38 @@
 # KeyNest API Documentation
 
+[Docs Home](index.md)
+
 This guide covers the KeyNest REST API for programmatic access to your environment variables and project management.
 
 ## 📋 Table of Contents
 
-- [Authentication](#authentication)
-- [Base URL & Versioning](#base-url--versioning)
-- [Response Format](#response-format)
-- [Rate Limiting](#rate-limiting)
-- [Error Handling](#error-handling)
-- [Authentication Endpoints](#authentication-endpoints)
-- [Organization Endpoints](#organization-endpoints)
-- [Project Endpoints](#project-endpoints)
-- [Environment Endpoints](#environment-endpoints)
-- [Variable Endpoints](#variable-endpoints)
-- [Import/Export Endpoints](#importexport-endpoints)
-- [Audit Log Endpoints](#audit-log-endpoints)
-- [SDKs and Integrations](#sdks-and-integrations)
+- [Authentication](#-authentication)
+- [Base URL & Versioning](#-base-url--versioning)
+- [Response Format](#-response-format)
+- [Rate Limiting](#-rate-limiting)
+- [Error Handling](#-error-handling)
+- [Authentication Endpoints](#-authentication-endpoints)
+- [Organization Endpoints](#-organization-endpoints)
+- [Project Endpoints](#-project-endpoints)
+- [Environment Endpoints](#-environment-endpoints)
+- [Variable Endpoints](#-variable-endpoints)
+- [Import/Export Endpoints](#-importexport-endpoints)
+- [Audit Log Endpoints](#-audit-log-endpoints)
+- [Health and Status](#-health-and-status)
+- [SDKs and Integrations](#-sdks-and-integrations)
+- [Webhooks (Coming Soon)](#-webhooks-coming-soon)
+- [Best Practices](#-best-practices)
+- [API Support](#-api-support)
 
 ## 🔐 Authentication
 
-KeyNest uses JWT (JSON Web Token) based authentication for API access.
+KeyNest uses Token-based authentication for API access. Each user receives a unique token upon successful login that must be included in API requests.
 
 ### Getting Authentication Token
 
 ```bash
 # Login to get authentication token
-curl -X POST https://api.keynest.dev/api/auth/login/ \
+curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -35,7 +41,7 @@ curl -X POST https://api.keynest.dev/api/auth/login/ \
 
 # Response
 {
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b",
   "user": {
     "id": 1,
     "username": "user",
@@ -52,59 +58,61 @@ curl -X POST https://api.keynest.dev/api/auth/login/ \
 Include the token in the `Authorization` header for all API requests:
 
 ```bash
-curl -H "Authorization: Token YOUR_JWT_TOKEN" \
-  https://api.keynest.dev/api/projects/
+curl -H "Authorization: Token YOUR_TOKEN_HERE" \
+  http://localhost:8000/api/projects/
 ```
 
 ### Token Lifecycle
 
-- **Access Token Lifetime**: 15 minutes (configurable)
-- **Refresh Token Lifetime**: 7 days (configurable)
-- **Token Format**: JWT with HS256 signing
+- **Token Lifetime**: Indefinite (until manually revoked)
+- **Token Format**: 40-character hexadecimal string
 - **Token Storage**: Store securely, never in plain text
 
 ## 🌐 Base URL & Versioning
 
-**Base URL**: `https://api.keynest.dev`
+**Base URL**: `http://localhost:8000` (Development) / `https://your-domain.com` (Production)
 
 **Current Version**: `v1` (included in all endpoints)
 
 **API Endpoints**: All endpoints are prefixed with `/api/`
 
-**Full URL Format**: `https://api.keynest.dev/api/{endpoint}/`
+**Full URL Format**: `http://localhost:8000/api/{endpoint}/` (Development)
 
 ## 📄 Response Format
 
 All API responses follow a consistent JSON format:
 
 ### Success Response
+
 ```json
 {
   "count": 25,
-  "next": "https://api.keynest.dev/api/projects/?page=2",
+  "next": "http://localhost:8000/api/projects/?page=2",
   "previous": null,
   "results": [
     {
       "id": 1,
       "name": "My Project",
-      "created_at": "2024-01-15T10:30:00Z"
+      "created_at": "2025-08-30T10:30:00Z"
     }
   ]
 }
 ```
 
 ### Single Resource Response
+
 ```json
 {
   "id": 1,
   "name": "My Project",
   "description": "A sample project",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z"
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T10:30:00Z"
 }
 ```
 
 ### Error Response
+
 ```json
 {
   "error": "Validation failed",
@@ -124,6 +132,7 @@ API requests are rate limited to prevent abuse:
 - **Burst Limit**: 50 requests per minute
 
 ### Rate Limit Headers
+
 ```http
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 999
@@ -131,6 +140,7 @@ X-RateLimit-Reset: 1642248000
 ```
 
 ### Rate Limit Exceeded Response
+
 ```json
 {
   "error": "Rate limit exceeded",
@@ -156,12 +166,13 @@ X-RateLimit-Reset: 1642248000
 | `500` | Internal Server Error | Server error |
 
 ### Error Response Format
+
 ```json
 {
   "error": "Error message",
   "details": "Additional error details or field-specific errors",
   "code": "ERROR_CODE",
-  "timestamp": "2024-01-15T10:30:00Z"
+  "timestamp": "2025-08-30T10:30:00Z"
 }
 ```
 
@@ -174,6 +185,7 @@ POST /api/auth/register/
 ```
 
 **Request Body**:
+
 ```json
 {
   "username": "newuser",
@@ -186,10 +198,11 @@ POST /api/auth/register/
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "message": "User registered successfully",
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b",
   "user": {
     "id": 1,
     "username": "newuser",
@@ -197,7 +210,7 @@ POST /api/auth/register/
     "first_name": "John",
     "last_name": "Doe",
     "full_name": "John Doe",
-    "date_joined": "2024-01-15T10:30:00Z"
+    "date_joined": "2025-08-30T10:30:00Z"
   },
   "organization": {
     "id": 1,
@@ -213,6 +226,7 @@ POST /api/auth/login/
 ```
 
 **Request Body**:
+
 ```json
 {
   "email": "user@example.com",
@@ -221,9 +235,10 @@ POST /api/auth/login/
 ```
 
 **Response** (200 OK):
+
 ```json
 {
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b",
   "user": {
     "id": 1,
     "username": "newuser",
@@ -241,9 +256,10 @@ POST /api/auth/login/
 POST /api/auth/logout/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```json
 {
   "message": "Successfully logged out"
@@ -256,9 +272,10 @@ POST /api/auth/logout/
 GET /api/auth/profile/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```json
 {
   "id": 1,
@@ -267,8 +284,8 @@ GET /api/auth/profile/
   "first_name": "John",
   "last_name": "Doe",
   "full_name": "John Doe",
-  "date_joined": "2024-01-15T10:30:00Z",
-  "last_login": "2024-01-15T10:30:00Z",
+  "date_joined": "2025-08-30T10:30:00Z",
+  "last_login": "2025-08-30T10:30:00Z",
   "is_active": true
 }
 ```
@@ -281,9 +298,10 @@ GET /api/auth/profile/
 GET /api/organizations/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```json
 {
   "count": 2,
@@ -294,8 +312,8 @@ GET /api/organizations/
       "id": 1,
       "name": "Acme Corp",
       "description": "Main company organization",
-      "created_at": "2024-01-15T10:30:00Z",
-      "updated_at": "2024-01-15T10:30:00Z",
+      "created_at": "2025-08-30T10:30:00Z",
+      "updated_at": "2025-08-30T10:30:00Z",
       "member_count": 5,
       "project_count": 3,
       "user_role": "admin"
@@ -310,16 +328,17 @@ GET /api/organizations/
 GET /api/organizations/{id}/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```json
 {
   "id": 1,
   "name": "Acme Corp",
   "description": "Main company organization",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T10:30:00Z",
   "member_count": 5,
   "project_count": 3,
   "user_role": "admin"
@@ -332,9 +351,10 @@ GET /api/organizations/{id}/
 POST /api/organizations/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Request Body**:
+
 ```json
 {
   "name": "New Organization",
@@ -343,13 +363,14 @@ POST /api/organizations/
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": 2,
   "name": "New Organization", 
   "description": "Description of the new organization",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T10:30:00Z",
   "member_count": 1,
   "project_count": 0,
   "user_role": "admin"
@@ -364,20 +385,23 @@ POST /api/organizations/
 GET /api/projects/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Query Parameters**:
+
 - `organization` (optional): Filter by organization ID
 - `search` (optional): Search project names and descriptions
 - `page` (optional): Page number for pagination
 
 **Example**:
+
 ```bash
-curl -H "Authorization: Token YOUR_JWT_TOKEN" \
-  "https://api.keynest.dev/api/projects/?organization=1&search=web"
+curl -H "Authorization: Token YOUR_TOKEN_HERE" \
+  "http://localhost:8000/api/projects/?organization=1&search=web"
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "count": 1,
@@ -390,8 +414,8 @@ curl -H "Authorization: Token YOUR_JWT_TOKEN" \
       "description": "Main web application project",
       "organization": 1,
       "organization_name": "Acme Corp",
-      "created_at": "2024-01-15T10:30:00Z",
-      "updated_at": "2024-01-15T10:30:00Z",
+      "created_at": "2025-08-30T10:30:00Z",
+      "updated_at": "2025-08-30T10:30:00Z",
       "created_by_name": "John Doe",
       "environment_count": 3
     }
@@ -405,9 +429,10 @@ curl -H "Authorization: Token YOUR_JWT_TOKEN" \
 GET /api/projects/{id}/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```json
 {
   "id": 1,
@@ -415,8 +440,8 @@ GET /api/projects/{id}/
   "description": "Main web application project",
   "organization": 1,
   "organization_name": "Acme Corp",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T10:30:00Z",
   "created_by_name": "John Doe",
   "environment_count": 3
 }
@@ -428,9 +453,10 @@ GET /api/projects/{id}/
 POST /api/projects/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Request Body**:
+
 ```json
 {
   "name": "New Project",
@@ -440,6 +466,7 @@ POST /api/projects/
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": 2,
@@ -447,8 +474,8 @@ POST /api/projects/
   "description": "Project description", 
   "organization": 1,
   "organization_name": "Acme Corp",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T10:30:00Z",
   "created_by_name": "John Doe",
   "environment_count": 0
 }
@@ -460,9 +487,10 @@ POST /api/projects/
 PATCH /api/projects/{id}/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Request Body** (partial update):
+
 ```json
 {
   "description": "Updated project description"
@@ -470,6 +498,7 @@ PATCH /api/projects/{id}/
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "id": 2,
@@ -477,8 +506,8 @@ PATCH /api/projects/{id}/
   "description": "Updated project description",
   "organization": 1,
   "organization_name": "Acme Corp",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T11:00:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T11:00:00Z",
   "created_by_name": "John Doe",
   "environment_count": 0
 }
@@ -490,7 +519,7 @@ PATCH /api/projects/{id}/
 DELETE /api/projects/{id}/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (204 No Content)
 
@@ -502,9 +531,10 @@ DELETE /api/projects/{id}/
 GET /api/environments/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Query Parameters**:
+
 - `project` (optional): Filter by project ID
 - `environment_type` (optional): Filter by type (development, staging, production, testing)
 
@@ -514,9 +544,10 @@ GET /api/environments/
 GET /api/projects/{project_id}/environments/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```json
 {
   "count": 3,
@@ -530,8 +561,8 @@ GET /api/projects/{project_id}/environments/
       "project_name": "Web Application",
       "environment_type": "production",
       "description": "Production environment",
-      "created_at": "2024-01-15T10:30:00Z",
-      "updated_at": "2024-01-15T10:30:00Z",
+      "created_at": "2025-08-30T10:30:00Z",
+      "updated_at": "2025-08-30T10:30:00Z",
       "created_by_name": "John Doe",
       "variable_count": 15
     }
@@ -545,9 +576,10 @@ GET /api/projects/{project_id}/environments/
 POST /api/environments/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Request Body**:
+
 ```json
 {
   "name": "staging",
@@ -558,6 +590,7 @@ POST /api/environments/
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": 2,
@@ -566,8 +599,8 @@ POST /api/environments/
   "project_name": "Web Application",
   "environment_type": "staging",
   "description": "Staging environment for testing",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T10:30:00Z",
   "created_by_name": "John Doe",
   "variable_count": 0
 }
@@ -581,9 +614,10 @@ POST /api/environments/
 GET /api/environments/{environment_id}/variables/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```json
 {
   "count": 2,
@@ -596,8 +630,8 @@ GET /api/environments/{environment_id}/variables/
       "decrypted_value": "postgresql://user:pass@host/db",
       "environment": 1,
       "environment_name": "production",
-      "created_at": "2024-01-15T10:30:00Z",
-      "updated_at": "2024-01-15T10:30:00Z",
+      "created_at": "2025-08-30T10:30:00Z",
+      "updated_at": "2025-08-30T10:30:00Z",
       "created_by_name": "John Doe"
     }
   ]
@@ -610,9 +644,10 @@ GET /api/environments/{environment_id}/variables/
 POST /api/variables/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Request Body**:
+
 ```json
 {
   "key": "API_KEY",
@@ -622,6 +657,7 @@ POST /api/variables/
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": 2,
@@ -629,8 +665,8 @@ POST /api/variables/
   "decrypted_value": "sk_live_abcd1234567890",
   "environment": 1,
   "environment_name": "production",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T10:30:00Z",
   "created_by_name": "John Doe"
 }
 ```
@@ -641,9 +677,10 @@ POST /api/variables/
 PATCH /api/variables/{id}/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Request Body**:
+
 ```json
 {
   "value": "new_secret_value"
@@ -651,6 +688,7 @@ PATCH /api/variables/{id}/
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "id": 2,
@@ -658,8 +696,8 @@ PATCH /api/variables/{id}/
   "decrypted_value": "new_secret_value",
   "environment": 1,
   "environment_name": "production",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T11:00:00Z",
+  "created_at": "2025-08-30T10:30:00Z",
+  "updated_at": "2025-08-30T11:00:00Z",
   "created_by_name": "John Doe"
 }
 ```
@@ -670,7 +708,7 @@ PATCH /api/variables/{id}/
 DELETE /api/variables/{id}/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (204 No Content)
 
@@ -682,14 +720,15 @@ DELETE /api/variables/{id}/
 GET /api/environments/{environment_id}/export/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Response** (200 OK):
+
 ```env
 # Generated by KeyNest - Environment: production
 # Project: Web Application
 # Organization: Acme Corp
-# Generated on: 2024-01-15 10:30:00 UTC
+# Generated on: 2025-08-30 10:30:00 UTC
 
 DATABASE_URL=postgresql://user:pass@host/db
 API_KEY=sk_live_abcd1234567890
@@ -702,24 +741,28 @@ JWT_SECRET=super_secret_jwt_key
 POST /api/environments/{environment_id}/import/
 ```
 
-**Headers**: 
-- `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**:
+
+- `Authorization: Token YOUR_TOKEN_HERE`
 - `Content-Type: multipart/form-data`
 
 **Request Body** (form data):
-```
+
+```text
 file: [.env file content]
 ```
 
 **Example**:
+
 ```bash
 curl -X POST \
-  -H "Authorization: Token YOUR_JWT_TOKEN" \
+  -H "Authorization: Token YOUR_TOKEN_HERE" \
   -F "file=@.env" \
-  https://api.keynest.dev/api/environments/1/import/
+  http://localhost:8000/api/environments/1/import/
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "message": "Import completed successfully",
@@ -741,9 +784,10 @@ curl -X POST \
 GET /api/audit-logs/
 ```
 
-**Headers**: `Authorization: Token YOUR_JWT_TOKEN`
+**Headers**: `Authorization: Token YOUR_TOKEN_HERE`
 
 **Query Parameters**:
+
 - `user` (optional): Filter by user ID
 - `action` (optional): Filter by action type
 - `target_type` (optional): Filter by resource type
@@ -751,6 +795,7 @@ GET /api/audit-logs/
 - `date_to` (optional): Filter to date (YYYY-MM-DD)
 
 **Response** (200 OK):
+
 ```json
 {
   "count": 1,
@@ -769,7 +814,7 @@ GET /api/audit-logs/
         "environment_name": "production"
       },
       "ip_address": "192.168.1.1",
-      "timestamp": "2024-01-15T10:30:00Z"
+      "timestamp": "2025-08-30T10:30:00Z"
     }
   ]
 }
@@ -784,12 +829,12 @@ GET /health/
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "status": "healthy",
   "service": "KeyNest API",
-  "version": "1.0.0",
-  "timestamp": "2024-01-15T10:30:00Z"
+  "version": "1.0.0"
 }
 ```
 
@@ -800,6 +845,7 @@ GET /api/
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "message": "Welcome to KeyNest API",
@@ -807,7 +853,8 @@ GET /api/
   "endpoints": {
     "authentication": "/api/auth/",
     "projects": "/api/projects/",
-    "health": "/health/"
+    "health": "/health/",
+    "admin": "/admin/"
   }
 }
 ```
@@ -892,10 +939,11 @@ Configure webhooks to receive notifications about KeyNest events:
 ```
 
 **Webhook Payload Example**:
+
 ```json
 {
   "event": "variable.created",
-  "timestamp": "2024-01-15T10:30:00Z",
+  "timestamp": "2025-08-30T10:30:00Z",
   "data": {
     "variable": {
       "id": 1,
@@ -957,8 +1005,8 @@ def make_api_request(url, headers, data=None):
 
 ### Getting Help
 
-- **API Issues**: [GitHub Issues](https://github.com/keynest/keynest/issues)
-- **Integration Help**: [GitHub Discussions](https://github.com/keynest/keynest/discussions)
+- **API Issues**: [GitHub Issues](https://github.com/your-org/keynest/issues)
+- **Integration Help**: [GitHub Discussions](https://github.com/your-org/keynest/discussions)
 - **Documentation**: This guide and [User Guide](user-guide.md)
 
 ### API Updates
@@ -967,8 +1015,12 @@ def make_api_request(url, headers, data=None):
 - **New Features**: Documented in changelog
 - **Deprecations**: 6 months notice before removal
 
-Stay updated with API changes by watching our [GitHub repository](https://github.com/keynest/keynest)!
+Stay updated with API changes by watching our [GitHub repository](https://github.com/your-org/keynest)!
 
 ---
 
 **Happy coding with KeyNest API!** 🚀🔑
+
+---
+
+Previous: user-guide.md | Next: security.md

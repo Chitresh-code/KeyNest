@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/auth';
 import { ROUTES } from '@/lib/constants';
+import { Logo } from '@/components/ui/logo';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -46,7 +47,10 @@ export default function ProtectedRoute({
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <div className="mb-4">
+            <Logo size="xl" className="mx-auto mb-2" />
+          </div>
+          <Loader2 className="h-6 w-6 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>

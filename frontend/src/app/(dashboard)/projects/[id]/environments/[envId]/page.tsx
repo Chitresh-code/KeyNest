@@ -44,10 +44,10 @@ import EditVariableDialog from '@/components/variables/edit-variable-dialog';
 import DeleteConfirmDialog from '@/components/common/delete-confirm-dialog';
 
 const environmentTypeColors = {
-  development: 'bg-blue-100 text-blue-800',
-  staging: 'bg-yellow-100 text-yellow-800', 
-  production: 'bg-red-100 text-red-800',
-  testing: 'bg-green-100 text-green-800',
+  development: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
+  staging: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300', 
+  production: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300',
+  testing: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300',
 };
 
 export default function EnvironmentVariablesPage() {
@@ -134,7 +134,7 @@ export default function EnvironmentVariablesPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading environment...</p>
+          <p className="text-gray-600 dark:text-muted-foreground">Loading environment...</p>
         </div>
       </div>
     );
@@ -143,8 +143,8 @@ export default function EnvironmentVariablesPage() {
   if (!environment) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-lg font-medium text-gray-900 mb-2">Environment not found</h2>
-        <p className="text-gray-600 mb-4">The environment you're looking for doesn't exist or you don't have access to it.</p>
+        <h2 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">Environment not found</h2>
+        <p className="text-gray-600 dark:text-muted-foreground mb-4">The environment you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.</p>
         <Button onClick={() => router.back()}>Go Back</Button>
       </div>
     );
@@ -164,12 +164,12 @@ export default function EnvironmentVariablesPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center space-x-3 mb-2">
-            <h1 className="text-2xl font-bold text-gray-900">{environment.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">{environment.name}</h1>
             <Badge className={environmentTypeColors[environment.environment_type]}>
               {environment.environment_type}
             </Badge>
           </div>
-          <p className="text-gray-600">{environment.description || 'No description'}</p>
+          <p className="text-gray-600 dark:text-muted-foreground">{environment.description || 'No description'}</p>
         </div>
       </div>
 
@@ -178,22 +178,22 @@ export default function EnvironmentVariablesPage() {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">Project</label>
-              <p className="text-gray-900">{environment.project_name}</p>
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Project</label>
+              <p className="text-gray-900 dark:text-foreground">{environment.project_name}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Variables</label>
-              <p className="text-gray-900">{environment.variable_count}</p>
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Variables</label>
+              <p className="text-gray-900 dark:text-foreground">{environment.variable_count}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Created</label>
-              <p className="text-gray-900">
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Created</label>
+              <p className="text-gray-900 dark:text-foreground">
                 {formatDistanceToNow(new Date(environment.created_at))} ago
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Created By</label>
-              <p className="text-gray-900">{environment.created_by_name}</p>
+              <label className="text-sm font-medium text-gray-700 dark:text-muted-foreground">Created By</label>
+              <p className="text-gray-900 dark:text-foreground">{environment.created_by_name}</p>
             </div>
           </div>
         </CardContent>
@@ -203,8 +203,8 @@ export default function EnvironmentVariablesPage() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Environment Variables</h2>
-            <p className="text-gray-600">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground">Environment Variables</h2>
+            <p className="text-gray-600 dark:text-muted-foreground">
               Manage variables for the {environment.name} environment
             </p>
           </div>
@@ -249,16 +249,16 @@ export default function EnvironmentVariablesPage() {
         {variablesLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">Loading variables...</span>
+            <span className="ml-2 text-gray-600 dark:text-muted-foreground">Loading variables...</span>
           </div>
         ) : filteredVariables.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">
                 {searchTerm ? 'No variables found' : 'No variables yet'}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-muted-foreground mb-4">
                 {searchTerm 
                   ? 'Try adjusting your search terms'
                   : 'Add your first environment variable to get started'
@@ -296,14 +296,14 @@ export default function EnvironmentVariablesPage() {
                     <TableRow key={variable.id}>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                          <code className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-900 dark:text-foreground">
                             {variable.key}
                           </code>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2 max-w-md">
-                          <code className="text-sm font-mono bg-gray-50 px-2 py-1 rounded truncate flex-1">
+                          <code className="text-sm font-mono bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded truncate flex-1 text-gray-900 dark:text-foreground">
                             {displayValue || '(empty)'}
                           </code>
                           {variable.decrypted_value !== '[HIDDEN]' && variable.decrypted_value !== '[NO_ACCESS]' && (
@@ -333,7 +333,7 @@ export default function EnvironmentVariablesPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           {formatDistanceToNow(new Date(variable.created_at))} ago
                           {variable.created_by_name && (
                             <div className="text-xs">by {variable.created_by_name}</div>

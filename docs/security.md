@@ -1,5 +1,7 @@
 # Security Best Practices for KeyNest
 
+[Docs Home](index.md)
+
 This guide covers security best practices for using KeyNest to protect your environment variables and sensitive configuration data.
 
 ## 🔒 Core Security Principles
@@ -598,3 +600,7 @@ curl -H "Authorization: Bearer hardcoded_token_in_script" \
 - **Include**: Incident details, affected systems, immediate steps taken
 
 Remember: Security is a shared responsibility. Every team member plays a crucial role in keeping KeyNest and your data secure! 🔐🛡️
+
+---
+
+Previous: api.md | Next: configuration.md

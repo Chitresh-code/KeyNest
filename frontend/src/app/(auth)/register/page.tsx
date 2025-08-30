@@ -76,12 +76,12 @@ export default function RegisterPage() {
   const isLoading = isSubmitting || registerMutation.isPending;
 
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+    <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-gray-900">
+        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
           Create your account
         </CardTitle>
-        <CardDescription className="text-gray-600">
+        <CardDescription className="text-gray-600 dark:text-gray-300">
           Join KeyNest and start managing your environment variables securely.
         </CardDescription>
       </CardHeader>
@@ -90,101 +90,101 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Username Field */}
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="username" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Username *
             </Label>
             <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 id="username"
                 type="text"
                 placeholder="johndoe"
-                className="pl-9 bg-white/50"
+                className="pl-9 bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('username')}
                 disabled={isLoading}
               />
             </div>
             {errors.username && (
-              <p className="text-sm text-red-600">{errors.username.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.username.message}</p>
             )}
           </div>
 
           {/* Email Field */}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Email address *
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 id="email"
                 type="email"
                 placeholder="john@example.com"
-                className="pl-9 bg-white/50"
+                className="pl-9 bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('email')}
                 disabled={isLoading}
               />
             </div>
             {errors.email && (
-              <p className="text-sm text-red-600">{errors.email.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
             )}
           </div>
 
           {/* Name Fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 First name
               </Label>
               <Input
                 id="firstName"
                 type="text"
                 placeholder="John"
-                className="bg-white/50"
+                className="bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('firstName')}
                 disabled={isLoading}
               />
               {errors.firstName && (
-                <p className="text-sm text-red-600">{errors.firstName.message}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.firstName.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Last name
               </Label>
               <Input
                 id="lastName"
                 type="text"
                 placeholder="Doe"
-                className="bg-white/50"
+                className="bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('lastName')}
                 disabled={isLoading}
               />
               {errors.lastName && (
-                <p className="text-sm text-red-600">{errors.lastName.message}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.lastName.message}</p>
               )}
             </div>
           </div>
 
           {/* Password Field */}
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Password *
             </Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Create a strong password"
-                className="pl-9 pr-9 bg-white/50"
+                className="pl-9 pr-9 bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('password')}
                 disabled={isLoading}
               />
               <button
                 type="button"
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
               >
@@ -196,28 +196,28 @@ export default function RegisterPage() {
               </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-red-600">{errors.password.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
             )}
           </div>
 
           {/* Confirm Password Field */}
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Confirm password *
             </Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm your password"
-                className="pl-9 pr-9 bg-white/50"
+                className="pl-9 pr-9 bg-white/50 dark:bg-gray-700/50 dark:text-white dark:border-gray-600"
                 {...register('confirmPassword')}
                 disabled={isLoading}
               />
               <button
                 type="button"
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 disabled={isLoading}
               >
@@ -229,19 +229,19 @@ export default function RegisterPage() {
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
             )}
           </div>
 
           {/* Terms and Privacy */}
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-300">
             <p>
               By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-blue-600 hover:text-blue-700 transition-colors">
+              <Link href="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-blue-600 hover:text-blue-700 transition-colors">
+              <Link href="/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
                 Privacy Policy
               </Link>
               .
@@ -265,12 +265,12 @@ export default function RegisterPage() {
           </Button>
 
           {/* Login Link */}
-          <div className="text-center pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
+          <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Already have an account?{' '}
               <Link
                 href="/login"
-                className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
                 Sign in
               </Link>

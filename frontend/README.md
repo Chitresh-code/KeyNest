@@ -16,7 +16,7 @@ This is the frontend application for KeyNest, built with Next.js 14, TypeScript,
 
 ## 📁 Project Structure
 
-```
+```text
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── (auth)/            # Authentication pages
@@ -54,21 +54,25 @@ src/
 ### Installation
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Configure environment variables**
+
    ```bash
    cp .env.local.example .env.local
    ```
 
    Edit `.env.local` and set:
+
    ```env
    NEXT_PUBLIC_API_BASE_URL=http://localhost:8001
    ```
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -79,6 +83,7 @@ src/
 ## 📜 Available Scripts
 
 ### Development
+
 ```bash
 # Start development server
 npm run dev
@@ -88,6 +93,7 @@ npm run dev -- -p 3001
 ```
 
 ### Building
+
 ```bash
 # Build for production
 npm run build
@@ -97,6 +103,7 @@ npm run start
 ```
 
 ### Code Quality
+
 ```bash
 # Run ESLint
 npm run lint
@@ -282,18 +289,21 @@ NEXT_PUBLIC_APP_ENV=production
 
 ### Common Issues
 
-**Build fails with TypeScript errors**
+#### Build fails with TypeScript errors
+
 ```bash
 npm run type-check
 ```
 
-**Styling not working**
+#### Styling not working
+
 ```bash
 # Restart development server
 npm run dev
 ```
 
-**API calls failing**
+#### API calls failing
+
 ```bash
 # Check environment variables
 cat .env.local
@@ -310,6 +320,6 @@ curl http://localhost:8001/health/
 - [TanStack Query Documentation](https://tanstack.com/query)
 - [Shadcn/ui Components](https://ui.shadcn.com/docs)
 
----
+## 💬 Support
 
 **Need help?** Open an issue on [GitHub](https://github.com/keynest/keynest/issues)

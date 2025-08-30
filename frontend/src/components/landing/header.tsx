@@ -4,8 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Shield, Github } from 'lucide-react';
+import { Menu, Github } from 'lucide-react';
 import { APP_CONFIG, ROUTES } from '@/lib/constants';
+import { Logo } from '@/components/ui/logo';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const navigation = [
   { name: 'Features', href: '#features' },
@@ -18,15 +20,13 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="p-2 bg-blue-600 rounded-lg">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">
+            <Logo size="xl" />
+            <span className="text-xl font-bold text-gray-900 dark:text-foreground">
               {APP_CONFIG.name}
             </span>
           </Link>
@@ -37,7 +37,7 @@ export default function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm font-medium"
+                className="text-gray-600 dark:text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 text-sm font-medium"
               >
                 {item.name}
               </Link>
@@ -50,10 +50,11 @@ export default function Header() {
               href={APP_CONFIG.repository}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-600 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground transition-colors"
             >
               <Github className="h-5 w-5" />
             </Link>
+            <ThemeToggle />
             <Link href={ROUTES.login}>
               <Button variant="ghost" size="sm">
                 Sign In
@@ -74,10 +75,8 @@ export default function Header() {
             <SheetContent side="right" className="w-72">
               <div className="flex flex-col space-y-6 mt-6">
                 <Link href="/" className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-600 rounded-lg">
-                    <Shield className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-xl font-bold text-gray-900">
+                  <Logo size="xl" />
+                  <span className="text-xl font-bold text-gray-900 dark:text-foreground">
                     {APP_CONFIG.name}
                   </span>
                 </Link>
@@ -87,7 +86,7 @@ export default function Header() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                      className="text-gray-600 dark:text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {item.name}
@@ -106,15 +105,17 @@ export default function Header() {
                   </Link>
                 </div>
 
-                <Link
-                  href={APP_CONFIG.repository}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <Github className="h-5 w-5" />
-                  <span>View on GitHub</span>
-                </Link>
+                <div className="flex items-center justify-center space-x-4 pt-4 border-t border-gray-200 dark:border-border">
+                  <Link
+                    href={APP_CONFIG.repository}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground transition-colors"
+                  >
+                    <Github className="h-5 w-5" />
+                  </Link>
+                  <ThemeToggle />
+                </div>
               </div>
             </SheetContent>
           </Sheet>
