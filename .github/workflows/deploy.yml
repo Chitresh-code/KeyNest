@@ -52,17 +52,36 @@ jobs:
         
         echo "🚀 Starting deployment..."
         
-        # Navigate to project directory and pull latest changes
-        cd /home/ubuntu/KeyNest
-        git fetch origin
-        git reset --hard origin/main
-        git clean -fd
+        # Check if repository exists, clone if not
+        if [ ! -d "/home/ubuntu/KeyNest" ]; then
+          echo "📥 Repository not found, cloning..."
+          cd /home/ubuntu
+          git clone https://github.com/chitresh99/env-tracker.git KeyNest
+          cd KeyNest
+          echo "✅ Repository cloned successfully"
+        else
+          echo "📂 Repository exists, updating..."
+          cd /home/ubuntu/KeyNest
+          # Ensure it's a valid git repository
+          if [ ! -d ".git" ]; then
+            echo "🔄 Invalid git repository, re-cloning..."
+            cd /home/ubuntu
+            rm -rf KeyNest
+            git clone https://github.com/chitresh99/env-tracker.git KeyNest
+            cd KeyNest
+          else
+            # Pull latest changes
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
+          fi
+        fi
         
         # Make sure deploy script is executable
         chmod +x /home/ubuntu/KeyNest/backend/scripts/deploy.sh
         
         # Set DATABASE_URL environment variable for deployment
-        export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+        export DATABASE_URL="$DATABASE_URL"
         
         # Run the deployment script with external database
         /home/ubuntu/KeyNest/backend/scripts/deploy.sh
