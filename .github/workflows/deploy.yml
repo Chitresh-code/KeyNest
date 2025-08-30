@@ -27,17 +27,27 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/keynest-prod-key.pem
         chmod 600 ~/.ssh/keynest-prod-key.pem
-        ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+        
+        # Configure SSH to skip host key verification for CI/CD
+        cat >> ~/.ssh/config << EOF
+        Host $EC2_HOST
+          HostName $EC2_HOST
+          User $EC2_USER
+          IdentityFile ~/.ssh/keynest-prod-key.pem
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+        EOF
 
     - name: Test SSH connection
       run: |
-        ssh -i ~/.ssh/keynest-prod-key.pem -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"
+        echo "Testing SSH connection to $EC2_HOST..."
+        ssh -o ConnectTimeout=30 $EC2_HOST "echo 'SSH connection successful'"
 
     - name: Deploy application
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
-        ssh -i ~/.ssh/keynest-prod-key.pem $EC2_USER@$EC2_HOST << 'DEPLOY_SCRIPT'
+        ssh $EC2_HOST << 'DEPLOY_SCRIPT'
         set -e
         
         echo "🚀 Starting deployment..."
