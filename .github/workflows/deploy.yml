@@ -45,7 +45,7 @@ jobs:
         
         # Stop existing containers gracefully
         echo "⏹️  Stopping existing containers..."
-        cd backend
+        cd $DEPLOY_PATH/backend
         docker-compose -f docker-compose.dev.yml down || true
         
         # Backup current version
@@ -62,7 +62,7 @@ jobs:
         
         # Build and start services
         echo "🔨 Building and starting services..."
-        cd backend
+        cd $DEPLOY_PATH/backend
         docker-compose -f docker-compose.dev.yml build --no-cache
         docker-compose -f docker-compose.dev.yml up -d
         
@@ -85,6 +85,7 @@ jobs:
         
         if [ $timeout -le 0 ]; then
           echo "❌ Health check failed! Rolling back..."
+          cd $DEPLOY_PATH/backend
           docker-compose -f docker-compose.dev.yml logs --tail=50
           exit 1
         fi
@@ -95,6 +96,7 @@ jobs:
         
         # Show final status
         echo "📊 Final status:"
+        cd $DEPLOY_PATH/backend
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
         
         echo "✅ Deployment completed successfully!"
