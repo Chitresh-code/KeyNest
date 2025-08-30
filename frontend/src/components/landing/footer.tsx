@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Shield, Github, Twitter, Linkedin, Mail, Globe, Code } from 'lucide-react';
 import { APP_CONFIG } from '@/lib/constants';
 
 const navigation = {
@@ -34,22 +34,32 @@ const navigation = {
 const socialLinks = [
   {
     name: 'GitHub',
-    href: APP_CONFIG.repository,
+    href: APP_CONFIG.socials.github,
     icon: Github,
   },
   {
-    name: 'Twitter',
-    href: '#twitter',
-    icon: Twitter,
+    name: 'Website',
+    href: APP_CONFIG.socials.website,
+    icon: Globe,
   },
   {
     name: 'LinkedIn',
-    href: '#linkedin',
+    href: APP_CONFIG.socials.linkedin,
     icon: Linkedin,
   },
   {
+    name: 'Twitter',
+    href: APP_CONFIG.socials.twitter,
+    icon: Twitter,
+  },
+  {
+    name: 'LeetCode',
+    href: APP_CONFIG.socials.leetcode,
+    icon: Code,
+  },
+  {
     name: 'Email',
-    href: 'mailto:hello@keynest.dev',
+    href: `mailto:${APP_CONFIG.socials.email}`,
     icon: Mail,
   },
 ];

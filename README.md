@@ -65,7 +65,7 @@ KeyNest/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/keynest/keynest.git
+   git clone https://github.com/Chitresh-code/KeyNest.git
    cd keynest
    ```
 
@@ -208,7 +208,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🐛 Bug Reports & Feature Requests
 
-Please use [GitHub Issues](https://github.com/keynest/keynest/issues) to report bugs or request features.
+Please use [GitHub Issues](https://github.com/Chitresh-code/KeyNest/issues) to report bugs or request features.
 
 ## 💬 Community & Support
 
@@ -233,4 +233,4 @@ See our [Deployment Guide](docs/deployment.md) for detailed instructions.
 
 **Made with ❤️ by the KeyNest community**
 
-[Website](https://keynest.dev) • [Documentation](https://docs.keynest.dev) • [GitHub](https://github.com/keynest/keynest)
+[Website](https://chitresh.in) • [Documentation](https://key-nest-iota.vercel.app) • [GitHub](https://github.com/Chitresh-code/KeyNest)

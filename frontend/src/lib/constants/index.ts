@@ -2,8 +2,17 @@ export const APP_CONFIG = {
   name: 'KeyNest',
   description: 'Secure environment variable management for teams',
   version: '1.0.0',
-  author: 'KeyNest Team',
-  repository: 'https://github.com/keynest/keynest',
+  author: 'Chitresh Gyanani',
+  repository: 'https://github.com/Chitresh-code/KeyNest',
+  socials: {
+    website: 'https://chitresh.in',
+    email: 'gychitresh1290@gmail.com',
+    github: 'https://github.com/Chitresh-code',
+    linkedin: 'https://linkedin.com/in/chitresh-gyanani',
+    twitter: 'https://twitter.com/chitreshgyanani',
+    leetcode: 'https://leetcode.com/chitresh_g',
+    telegram: 'https://t.me/gyanani21',
+  },
 } as const;
 
 export const API_CONFIG = {
