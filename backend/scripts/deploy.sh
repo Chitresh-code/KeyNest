@@ -256,7 +256,7 @@ rollback() {
         log "Rolling back to backup: $latest_backup"
         
         # Remove current deployment and restore backup
-        rm -rf $DEPLOY_PATH
+        sudo rm -rf $DEPLOY_PATH
         cp -r $BACKUP_DIR/$latest_backup $DEPLOY_PATH
         
         # Start services from backup
