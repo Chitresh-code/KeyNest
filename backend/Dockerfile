@@ -1,4 +1,5 @@
 # Multi-stage Docker build for production KeyNest backend
+
 # Stage 1: Build stage with build dependencies
 FROM python:3.11-slim-bullseye as builder
 
@@ -56,15 +57,13 @@ COPY --chown=keynest:keynest . /app/
 RUN mkdir -p /app/logs /app/static /app/media && \
     chown -R keynest:keynest /app/logs /app/static /app/media
 
-# Switch to non-root user
-USER keynest
-
-# Create production requirements file for additional security tools
+# ---- Install production-only dependencies (as root, before dropping privileges) ----
 RUN echo "gunicorn==21.2.0" >> /tmp/prod_requirements.txt && \
-    echo "psycopg2-binary==2.9.7" >> /tmp/prod_requirements.txt
+    echo "psycopg2-binary==2.9.7" >> /tmp/prod_requirements.txt && \
+    pip install -r /tmp/prod_requirements.txt
 
-# Install production-only dependencies
-RUN pip install -r /tmp/prod_requirements.txt
+# Switch to non-root user for runtime
+USER keynest
 
 # Expose port
 EXPOSE 8000
