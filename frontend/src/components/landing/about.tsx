@@ -10,9 +10,9 @@ import {
   Users,
   Zap,
   Github,
-  Star,
-  GitFork,
-  Download,
+  // Star,
+  // GitFork,
+  // Download,
 } from 'lucide-react';
 
 const values = [
@@ -38,12 +38,15 @@ const values = [
   },
 ];
 
+// Commented out until we have real stats
+/*
 const stats = [
   { label: 'GitHub Stars', value: '2.5K+', icon: Star },
   { label: 'Contributors', value: '50+', icon: Users },
   { label: 'Forks', value: '400+', icon: GitFork },
   { label: 'Downloads', value: '10K+', icon: Download },
 ];
+*/
 
 export default function About() {
   return (
@@ -140,8 +143,10 @@ export default function About() {
             </motion.div>
           ))}
         </div>
-
+        {/* Commented out until we have real stats */}
+        
         {/* Community Stats */}
+        {/*
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -178,6 +183,7 @@ export default function About() {
             ))}
           </div>
         </motion.div>
+        */}
 
         {/* CTA */}
         <motion.div

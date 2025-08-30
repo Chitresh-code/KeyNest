@@ -1,0 +1,127 @@
+name: Deploy KeyNest Backend to EC2
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  EC2_HOST: 13.203.105.44
+  EC2_USER: ubuntu
+  DEPLOY_PATH: /home/ubuntu/KeyNest
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/keynest-prod-key.pem
+        chmod 600 ~/.ssh/keynest-prod-key.pem
+        ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+    - name: Test SSH connection
+      run: |
+        ssh -i ~/.ssh/keynest-prod-key.pem -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH connection successful'"
+
+    - name: Deploy application
+      run: |
+        ssh -i ~/.ssh/keynest-prod-key.pem $EC2_USER@$EC2_HOST << 'DEPLOY_SCRIPT'
+        set -e
+        
+        echo "🚀 Starting deployment..."
+        
+        # Navigate to project directory
+        cd $DEPLOY_PATH
+        
+        # Stop existing containers gracefully
+        echo "⏹️  Stopping existing containers..."
+        cd backend
+        docker-compose -f docker-compose.dev.yml down || true
+        
+        # Backup current version
+        echo "💾 Creating backup..."
+        cd /home/ubuntu
+        cp -r KeyNest KeyNest-backup-$(date +%Y%m%d-%H%M%S) || true
+        
+        # Pull latest changes
+        echo "📥 Pulling latest changes..."
+        cd $DEPLOY_PATH
+        git fetch origin
+        git reset --hard origin/main
+        git clean -fd
+        
+        # Build and start services
+        echo "🔨 Building and starting services..."
+        cd backend
+        docker-compose -f docker-compose.dev.yml build --no-cache
+        docker-compose -f docker-compose.dev.yml up -d
+        
+        # Wait for services to be ready
+        echo "⏳ Waiting for services to start..."
+        sleep 30
+        
+        # Health check
+        echo "🏥 Performing health check..."
+        timeout=60
+        while [ $timeout -gt 0 ]; do
+          if curl -f -s http://localhost:8001/api/ > /dev/null 2>&1; then
+            echo "✅ API is healthy!"
+            break
+          fi
+          echo "⏳ Waiting for API... ($timeout seconds remaining)"
+          sleep 5
+          timeout=$((timeout-5))
+        done
+        
+        if [ $timeout -le 0 ]; then
+          echo "❌ Health check failed! Rolling back..."
+          docker-compose -f docker-compose.dev.yml logs --tail=50
+          exit 1
+        fi
+        
+        # Cleanup old Docker images
+        echo "🧹 Cleaning up..."
+        docker image prune -f || true
+        
+        # Show final status
+        echo "📊 Final status:"
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+        
+        echo "✅ Deployment completed successfully!"
+        DEPLOY_SCRIPT
+
+    - name: Verify deployment
+      run: |
+        echo "🔍 Verifying deployment..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST:8001/api/ || echo "000")
+        if [ "$response" = "200" ]; then
+          echo "✅ Deployment verification successful!"
+        else
+          echo "❌ Deployment verification failed! HTTP status: $response"
+          exit 1
+        fi
+
+    - name: Cleanup SSH key
+      if: always()
+      run: |
+        rm -f ~/.ssh/keynest-prod-key.pem
+
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "🎉 Deployment to EC2 ($EC2_HOST) completed successfully!"
+          echo "🌐 API available at: http://$EC2_HOST:8001/api/"
+        else
+          echo "💥 Deployment failed! Check the logs above for details."
+        fi

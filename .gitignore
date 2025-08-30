@@ -358,6 +358,9 @@ $RECYCLE.BIN/
 *.p12
 *.pfx
 
+# EC2 Keys
+keynest-prod-key.pem
+
 # Secrets
 secrets/
 *.secret

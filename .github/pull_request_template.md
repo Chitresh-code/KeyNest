@@ -1,4 +1,4 @@
-## 📋 Description
+# 📋 Description
 
 <!-- Provide a brief description of your changes -->
 
@@ -28,18 +28,21 @@ Related to #(issue number)
 <!-- Describe the tests you ran to verify your changes -->
 
 ### Backend Testing
+
 - [ ] All existing tests pass
 - [ ] New tests added for new functionality
 - [ ] Manual testing performed
 - [ ] API endpoints tested
 
 ### Frontend Testing
+
 - [ ] Components render correctly
 - [ ] User interactions work as expected
 - [ ] Responsive design tested
 - [ ] Cross-browser testing performed
 
 ### Integration Testing
+
 - [ ] Frontend-backend integration tested
 - [ ] Authentication flow works
 - [ ] Data persistence verified
@@ -60,6 +63,7 @@ Related to #(issue number)
 <!-- Mark completed items with an x -->
 
 ### Code Quality
+
 - [ ] My code follows the project's style guidelines
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -69,18 +73,21 @@ Related to #(issue number)
 - [ ] New and existing unit tests pass locally with my changes
 
 ### Security
+
 - [ ] No sensitive data is exposed in logs or responses
 - [ ] Input validation is implemented where necessary
 - [ ] Authorization checks are in place for new endpoints
 - [ ] No security vulnerabilities introduced
 
 ### Documentation
+
 - [ ] Updated README.md if needed
 - [ ] Updated API documentation if needed
 - [ ] Added comments for complex logic
 - [ ] Updated environment variable documentation if needed
 
 ### Dependencies
+
 - [ ] No unnecessary dependencies added
 - [ ] All new dependencies are security-scanned
 - [ ] Version pins are appropriate
@@ -91,16 +98,19 @@ Related to #(issue number)
 <!-- Any special deployment considerations -->
 
 ### Database Changes
+
 - [ ] No database migrations required
 - [ ] Database migrations included and tested
 - [ ] Backward compatibility maintained
 
 ### Environment Variables
+
 - [ ] No new environment variables
 - [ ] New environment variables documented
 - [ ] Default values provided for new variables
 
 ### Breaking Changes
+
 - [ ] No breaking changes
 - [ ] Breaking changes documented
 - [ ] Migration guide provided
