@@ -1,5 +1,7 @@
 # 🔐 KeyNest Backend
 
+**Status**: Production deployment with CI/CD enabled ✅
+
 KeyNest is a production-ready developer tool for securely storing, managing, and sharing environment (.env) files across projects and platforms. This backend API provides comprehensive environment variable management with enterprise-grade security.
 
 ## 🚀 Features
