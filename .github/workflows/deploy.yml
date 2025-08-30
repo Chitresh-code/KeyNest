@@ -52,11 +52,14 @@ jobs:
         
         echo "🚀 Starting deployment..."
         
+        # Ensure git is installed
+        sudo apt-get update -qq && sudo apt-get install -y git
+        
         # Check if repository exists, clone if not
         if [ ! -d "/home/ubuntu/KeyNest" ]; then
           echo "📥 Repository not found, cloning..."
           cd /home/ubuntu
-          git clone https://github.com/chitresh99/env-tracker.git KeyNest
+          git clone https://github.com/Chitresh-code/KeyNest.git KeyNest
           cd KeyNest
           echo "✅ Repository cloned successfully"
         else
@@ -67,7 +70,7 @@ jobs:
             echo "🔄 Invalid git repository, re-cloning..."
             cd /home/ubuntu
             sudo rm -rf KeyNest
-            git clone https://github.com/chitresh99/env-tracker.git KeyNest
+            git clone https://github.com/Chitresh-code/KeyNest.git KeyNest
             cd KeyNest
           else
             # Pull latest changes
