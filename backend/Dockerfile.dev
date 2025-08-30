@@ -43,6 +43,9 @@ COPY . .
 # Create directories
 RUN mkdir -p logs static media
 
+# Collect static files during build
+RUN python manage.py collectstatic --noinput
+
 # Expose port
 EXPOSE 8000
 

@@ -325,3 +325,11 @@ if not DEBUG:
         'MAX_CONNS': 20,
         'MIN_CONNS': 5,
     }
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
