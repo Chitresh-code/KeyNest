@@ -238,7 +238,7 @@ ENVIRONMENT=production         # Environment identifiers
 ```bash
 # ✅ Good - Clear purpose, no sensitive data in name
 DATABASE_URL=postgresql://...
-API_KEY=sk_live_...
+API_KEY=example_api_key_...
 JWT_SECRET=random-secret-here
 
 # ❌ Bad - Exposes sensitive information
@@ -261,7 +261,7 @@ SECRET_KEY_FOR_STRIPE=...       # Exposes service
 # ✅ Strong secrets
 DATABASE_URL=postgresql://user:Kj9mX2nQ8vL5pR3w@host/db
 JWT_SECRET=7x9kL3mQ8vR5pN2wX6zY4tB1cF8gH9jM
-API_KEY=sk_live_51K7x9kL3mQ8vR5pN2wX6zY4tB1cF8gH
+API_KEY=example_strong_api_key_K7x9kL3mQ8vR5pN2wX6zY4tB1cF8gH
 
 # ❌ Weak secrets
 DATABASE_URL=postgresql://admin:password123@host/db
@@ -284,7 +284,7 @@ openssl rand -hex 32
 pwgen -s 16 1
 
 # API keys (URL-safe)  
-python -c "import secrets; print('sk_live_' + secrets.token_urlsafe(32))"
+python -c "import secrets; print('api_key_' + secrets.token_urlsafe(32))"
 ```
 
 ## 🌍 Environment Security
@@ -338,7 +338,7 @@ CORS_ORIGINS=https://staging.myapp.com
 ```bash
 # Maximum security
 DATABASE_URL=postgresql://prod_user:ExTr3m3Ly_S3cUr3_P@sS@prod-db/myapp
-API_KEY=sk_live_production_key_with_maximum_security
+API_KEY=production_api_key_with_maximum_security_ExTr3m3
 DEBUG=false
 LOG_LEVEL=warn
 CORS_ORIGINS=https://myapp.com,https://www.myapp.com

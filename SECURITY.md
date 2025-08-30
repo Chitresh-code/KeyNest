@@ -19,7 +19,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 Instead, please:
 
-1. **Email us** at security@keynest.dev
+1. **Email us** at gychitresh1280@gmail.com
 2. **Include the following information:**
    - Description of the vulnerability
    - Steps to reproduce the issue
