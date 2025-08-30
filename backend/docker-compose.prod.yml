@@ -1,0 +1,57 @@
+# KeyNest Production Docker Compose Configuration (External Database)
+version: '3.8'
+
+services:
+  # Redis for Production
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - keynest-prod-network
+
+  # KeyNest Production API (using external database)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=${DATABASE_URL}
+      - CACHE_BACKEND=django.core.cache.backends.redis.RedisCache
+      - CACHE_LOCATION=redis://redis:6379/1
+      - SECRET_KEY=${SECRET_KEY:-production-secret-key-change-this}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-xJKbPlTdQyJGxJwBqTdwT3J4cJwVjJqJKTTnQJqQJGQ=}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,13.203.105.44
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://key-nest-iota.vercel.app
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - LOG_LEVEL=INFO
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - /app/env  # Exclude virtual environment
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: python manage.py runserver 0.0.0.0:8000
+    networks:
+      - keynest-prod-network
+
+volumes:
+  redis_prod_data:
+    driver: local
+
+networks:
+  keynest-prod-network:
+    driver: bridge

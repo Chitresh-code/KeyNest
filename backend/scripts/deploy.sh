@@ -12,16 +12,24 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-DEPLOY_PATH="/home/ubuntu/KeyNest"
-COMPOSE_FILE="docker-compose.dev.yml"
-BACKUP_DIR="/home/ubuntu/keynest-backups"
-MAX_BACKUPS=5
-
 # Logging function
 log() {
     echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
 }
+
+# Configuration
+DEPLOY_PATH="/home/ubuntu/KeyNest"
+BACKUP_DIR="/home/ubuntu/keynest-backups"
+MAX_BACKUPS=5
+
+# Determine which compose file to use based on DATABASE_URL
+if [ -n "$DATABASE_URL" ]; then
+    COMPOSE_FILE="docker-compose.prod.yml"
+    log "Using production configuration with external database"
+else
+    COMPOSE_FILE="docker-compose.dev.yml"
+    log "Using development configuration with local database"
+fi
 
 error() {
     echo -e "${RED}[ERROR]${NC} $1" >&2
@@ -166,12 +174,16 @@ health_check() {
         all_healthy=false
     fi
     
-    # Check database connectivity
-    if docker-compose -f $COMPOSE_FILE exec -T db pg_isready -U keynest_dev > /dev/null 2>&1; then
-        success "Database health check passed"
+    # Check database connectivity (only for local database)
+    if [ -z "$DATABASE_URL" ]; then
+        if docker-compose -f $COMPOSE_FILE exec -T db pg_isready -U keynest_dev > /dev/null 2>&1; then
+            success "Database health check passed"
+        else
+            error "Database health check failed"
+            all_healthy=false
+        fi
     else
-        error "Database health check failed"
-        all_healthy=false
+        success "Database health check skipped (using external database)"
     fi
     
     # Check Redis connectivity

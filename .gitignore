@@ -365,6 +365,10 @@ keynest-prod-key.pem
 secrets/
 *.secret
 
+# Admin credentials
+superuser_creds.txt
+admin_creds.txt
+
 # Temporary files
 *.tmp
 *.temp
