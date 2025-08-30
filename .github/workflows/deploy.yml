@@ -40,66 +40,19 @@ jobs:
         
         echo "🚀 Starting deployment..."
         
-        # Navigate to project directory
-        cd $DEPLOY_PATH
-        
-        # Stop existing containers gracefully
-        echo "⏹️  Stopping existing containers..."
-        cd $DEPLOY_PATH/backend
-        docker-compose -f docker-compose.dev.yml down || true
-        
-        # Backup current version
-        echo "💾 Creating backup..."
-        cd /home/ubuntu
-        cp -r KeyNest KeyNest-backup-$(date +%Y%m%d-%H%M%S) || true
-        
-        # Pull latest changes
-        echo "📥 Pulling latest changes..."
-        cd $DEPLOY_PATH
+        # Navigate to project directory and pull latest changes
+        cd /home/ubuntu/KeyNest
         git fetch origin
         git reset --hard origin/main
         git clean -fd
         
-        # Build and start services
-        echo "🔨 Building and starting services..."
-        cd $DEPLOY_PATH/backend
-        docker-compose -f docker-compose.dev.yml build --no-cache
-        docker-compose -f docker-compose.dev.yml up -d
+        # Make sure deploy script is executable
+        chmod +x /home/ubuntu/KeyNest/backend/scripts/deploy.sh
         
-        # Wait for services to be ready
-        echo "⏳ Waiting for services to start..."
-        sleep 30
+        # Run the deployment script
+        /home/ubuntu/KeyNest/backend/scripts/deploy.sh
         
-        # Health check
-        echo "🏥 Performing health check..."
-        timeout=60
-        while [ $timeout -gt 0 ]; do
-          if curl -f -s http://localhost:8001/api/ > /dev/null 2>&1; then
-            echo "✅ API is healthy!"
-            break
-          fi
-          echo "⏳ Waiting for API... ($timeout seconds remaining)"
-          sleep 5
-          timeout=$((timeout-5))
-        done
-        
-        if [ $timeout -le 0 ]; then
-          echo "❌ Health check failed! Rolling back..."
-          cd $DEPLOY_PATH/backend
-          docker-compose -f docker-compose.dev.yml logs --tail=50
-          exit 1
-        fi
-        
-        # Cleanup old Docker images
-        echo "🧹 Cleaning up..."
-        docker image prune -f || true
-        
-        # Show final status
-        echo "📊 Final status:"
-        cd $DEPLOY_PATH/backend
-        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-        
-        echo "✅ Deployment completed successfully!"
+        echo "✅ Deployment workflow completed!"
         DEPLOY_SCRIPT
 
     - name: Verify deployment
