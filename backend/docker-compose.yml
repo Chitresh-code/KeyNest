@@ -68,7 +68,7 @@ services:
       timeout: 5s
       retries: 3
 
-  # Nginx Reverse Proxy for HTTPS and Static Files
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
     container_name: keynest-nginx
@@ -89,6 +89,20 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # 🔹 Web-based Log Viewer (Dozzle)
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: keynest-dozzle
+    ports:
+      - "9999:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    depends_on:
+      - api
+      - nginx
+      - redis
 
 volumes:
   redis_data:

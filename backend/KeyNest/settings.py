@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import environ
 import dj_database_url
+import sys
 from cryptography.fernet import Fernet
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -252,6 +253,39 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django.security': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'authentication': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'core': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Only add file handlers in DEBUG mode
+if DEBUG:
+    LOGGING['handlers'].update({
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
@@ -264,34 +298,11 @@ LOGGING = {
             'filename': BASE_DIR / 'logs' / 'security.log',
             'formatter': 'verbose',
         },
-        'console': {
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-    },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django.security': {
-            'handlers': ['security_file'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'authentication': {
-            'handlers': ['file', 'security_file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'core': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-    },
-}
+    })
+    LOGGING['root']['handlers'].append('file')
+    LOGGING['loggers']['django.security']['handlers'].append('security_file')
+    LOGGING['loggers']['authentication']['handlers'].extend(['file', 'security_file'])
+    LOGGING['loggers']['core']['handlers'].append('file')
 
 # Email Configuration for Production
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
