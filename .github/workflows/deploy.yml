@@ -1,153 +1,153 @@
-name: EC2
+# name: EC2
 
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/deploy.yml'
-  workflow_dispatch: # Allow manual trigger
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - 'backend/**'
+#       - '.github/workflows/deploy.yml'
+#   workflow_dispatch: # Allow manual trigger
 
-env:
-  EC2_HOST: 13.203.105.44
-  EC2_USER: ubuntu
-  DEPLOY_PATH: /home/ubuntu/KeyNest
+# env:
+#   EC2_HOST: 13.203.105.44
+#   EC2_USER: ubuntu
+#   DEPLOY_PATH: /home/ubuntu/KeyNest
 
-jobs:
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     name: Deploy
+#     runs-on: ubuntu-latest
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
 
-    - name: Setup SSH key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/keynest-prod-key.pem
-        chmod 600 ~/.ssh/keynest-prod-key.pem
+#     - name: Setup SSH key
+#       run: |
+#         mkdir -p ~/.ssh
+#         echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/keynest-prod-key.pem
+#         chmod 600 ~/.ssh/keynest-prod-key.pem
         
-        # Configure SSH to skip host key verification for CI/CD
-        cat >> ~/.ssh/config << EOF
-        Host $EC2_HOST
-          HostName $EC2_HOST
-          User $EC2_USER
-          IdentityFile ~/.ssh/keynest-prod-key.pem
-          StrictHostKeyChecking no
-          UserKnownHostsFile /dev/null
-        EOF
+#         # Configure SSH to skip host key verification for CI/CD
+#         cat >> ~/.ssh/config << EOF
+#         Host $EC2_HOST
+#           HostName $EC2_HOST
+#           User $EC2_USER
+#           IdentityFile ~/.ssh/keynest-prod-key.pem
+#           StrictHostKeyChecking no
+#           UserKnownHostsFile /dev/null
+#         EOF
 
-    - name: Test SSH connection
-      run: |
-        echo "Testing SSH connection to $EC2_HOST..."
-        ssh -o ConnectTimeout=30 $EC2_HOST "echo 'SSH connection successful'"
+#     - name: Test SSH connection
+#       run: |
+#         echo "Testing SSH connection to $EC2_HOST..."
+#         ssh -o ConnectTimeout=30 $EC2_HOST "echo 'SSH connection successful'"
 
-    - name: Deploy application
-      env:
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        REDIS_URL: ${{ secrets.REDIS_URL }}
-        CACHE_LOCATION: ${{ secrets.CACHE_LOCATION }}
-        ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-        CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
-        CORS_ALLOW_CREDENTIALS: ${{ secrets.CORS_ALLOW_CREDENTIALS }}
-        ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
-        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-        JWT_ACCESS_TOKEN_LIFETIME: ${{ secrets.JWT_ACCESS_TOKEN_LIFETIME }}
-        JWT_REFRESH_TOKEN_LIFETIME: ${{ secrets.JWT_REFRESH_TOKEN_LIFETIME }}
-        EMAIL_BACKEND: ${{ secrets.EMAIL_BACKEND }}
-        EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
-        EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
-        EMAIL_USE_TLS: ${{ secrets.EMAIL_USE_TLS }}
-        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-        DEFAULT_FROM_EMAIL: ${{ secrets.DEFAULT_FROM_EMAIL }}
-        DEBUG: ${{ secrets.DEBUG }}
-        LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
-        RATELIMIT_ENABLE: ${{ secrets.RATELIMIT_ENABLE }}
-        SECURE_SSL_REDIRECT: ${{ secrets.SECURE_SSL_REDIRECT }}
-        SECURE_HSTS_SECONDS: ${{ secrets.SECURE_HSTS_SECONDS }}
-        SESSION_COOKIE_SECURE: ${{ secrets.SESSION_COOKIE_SECURE }}
-        CSRF_COOKIE_SECURE: ${{ secrets.CSRF_COOKIE_SECURE }}
-        SITE_NAME: ${{ secrets.SITE_NAME }}
-        SITE_URL: ${{ secrets.SITE_URL }}
-        DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
-      run: |
-        ssh -o SendEnv=DATABASE_URL $EC2_HOST "DATABASE_URL=$DATABASE_URL /home/ubuntu/KeyNest/backend/scripts/deploy.sh"
-        set -e
+#     - name: Deploy application
+#       env:
+#         SECRET_KEY: ${{ secrets.SECRET_KEY }}
+#         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+#         REDIS_URL: ${{ secrets.REDIS_URL }}
+#         CACHE_LOCATION: ${{ secrets.CACHE_LOCATION }}
+#         ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+#         CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+#         CORS_ALLOW_CREDENTIALS: ${{ secrets.CORS_ALLOW_CREDENTIALS }}
+#         ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+#         JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+#         JWT_ACCESS_TOKEN_LIFETIME: ${{ secrets.JWT_ACCESS_TOKEN_LIFETIME }}
+#         JWT_REFRESH_TOKEN_LIFETIME: ${{ secrets.JWT_REFRESH_TOKEN_LIFETIME }}
+#         EMAIL_BACKEND: ${{ secrets.EMAIL_BACKEND }}
+#         EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+#         EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+#         EMAIL_USE_TLS: ${{ secrets.EMAIL_USE_TLS }}
+#         EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+#         EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+#         DEFAULT_FROM_EMAIL: ${{ secrets.DEFAULT_FROM_EMAIL }}
+#         DEBUG: ${{ secrets.DEBUG }}
+#         LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+#         RATELIMIT_ENABLE: ${{ secrets.RATELIMIT_ENABLE }}
+#         SECURE_SSL_REDIRECT: ${{ secrets.SECURE_SSL_REDIRECT }}
+#         SECURE_HSTS_SECONDS: ${{ secrets.SECURE_HSTS_SECONDS }}
+#         SESSION_COOKIE_SECURE: ${{ secrets.SESSION_COOKIE_SECURE }}
+#         CSRF_COOKIE_SECURE: ${{ secrets.CSRF_COOKIE_SECURE }}
+#         SITE_NAME: ${{ secrets.SITE_NAME }}
+#         SITE_URL: ${{ secrets.SITE_URL }}
+#         DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
+#       run: |
+#         ssh -o SendEnv=DATABASE_URL $EC2_HOST "DATABASE_URL=$DATABASE_URL /home/ubuntu/KeyNest/backend/scripts/deploy.sh"
+#         set -e
         
-        echo "🚀 Starting deployment..."
+#         echo "🚀 Starting deployment..."
         
-        # Ensure git is installed
-        sudo apt-get update -qq && sudo apt-get install -y git
+#         # Ensure git is installed
+#         sudo apt-get update -qq && sudo apt-get install -y git
         
-        # Check if repository exists, clone if not
-        if [ ! -d "/home/ubuntu/KeyNest" ]; then
-          echo "📥 Repository not found, cloning..."
-          cd /home/ubuntu
-          git clone https://github.com/Chitresh-code/KeyNest.git KeyNest
-          cd KeyNest
-          echo "✅ Repository cloned successfully"
-        else
-          echo "📂 Repository exists, updating..."
-          cd /home/ubuntu/KeyNest
-          # Ensure it's a valid git repository
-          if [ ! -d ".git" ]; then
-            echo "🔄 Invalid git repository, re-cloning..."
-            cd /home/ubuntu
-            sudo rm -rf KeyNest
-            git clone https://github.com/Chitresh-code/KeyNest.git KeyNest
-            cd KeyNest
-          else
-            # Pull latest changes
-            git fetch origin
-            git reset --hard origin/main
-            git clean -fd
-          fi
-        fi
+#         # Check if repository exists, clone if not
+#         if [ ! -d "/home/ubuntu/KeyNest" ]; then
+#           echo "📥 Repository not found, cloning..."
+#           cd /home/ubuntu
+#           git clone https://github.com/Chitresh-code/KeyNest.git KeyNest
+#           cd KeyNest
+#           echo "✅ Repository cloned successfully"
+#         else
+#           echo "📂 Repository exists, updating..."
+#           cd /home/ubuntu/KeyNest
+#           # Ensure it's a valid git repository
+#           if [ ! -d ".git" ]; then
+#             echo "🔄 Invalid git repository, re-cloning..."
+#             cd /home/ubuntu
+#             sudo rm -rf KeyNest
+#             git clone https://github.com/Chitresh-code/KeyNest.git KeyNest
+#             cd KeyNest
+#           else
+#             # Pull latest changes
+#             git fetch origin
+#             git reset --hard origin/main
+#             git clean -fd
+#           fi
+#         fi
         
-        # Make sure deploy script is executable
-        chmod +x /home/ubuntu/KeyNest/backend/scripts/deploy.sh
+#         # Make sure deploy script is executable
+#         chmod +x /home/ubuntu/KeyNest/backend/scripts/deploy.sh
         
-        # Set DATABASE_URL environment variable for deployment
-        export DATABASE_URL="$DATABASE_URL"
+#         # Set DATABASE_URL environment variable for deployment
+#         export DATABASE_URL="$DATABASE_URL"
         
-        # Run the deployment using docker-compose
-        cd /home/ubuntu/KeyNest/backend
-        docker-compose down --volumes --remove-orphans 2>/dev/null || true
-        docker-compose pull
-        docker-compose up -d --build
+#         # Run the deployment using docker-compose
+#         cd /home/ubuntu/KeyNest/backend
+#         docker-compose down --volumes --remove-orphans 2>/dev/null || true
+#         docker-compose pull
+#         docker-compose up -d --build
         
-        # Wait for services to be ready
-        sleep 30
+#         # Wait for services to be ready
+#         sleep 30
         
-        # Run database migrations
-        docker-compose exec -T api python manage.py makemigrations --noinput
-        docker-compose exec -T api python manage.py migrate --noinput
-        docker-compose exec -T api python manage.py collectstatic --noinput
+#         # Run database migrations
+#         docker-compose exec -T api python manage.py makemigrations --noinput
+#         docker-compose exec -T api python manage.py migrate --noinput
+#         docker-compose exec -T api python manage.py collectstatic --noinput
         
-        echo "✅ Deployment workflow completed!"
-        DEPLOY_SCRIPT
+#         echo "✅ Deployment workflow completed!"
+#         DEPLOY_SCRIPT
 
-    - name: Verify deployment
-      run: |
-        echo "🔍 Verifying deployment..."
-        echo "✅ Deployment completed successfully! Services are running on EC2."
-        echo "🌐 API available at: http://$EC2_HOST:8001/api/"
-        echo "Note: External access requires security group configuration for port 8001"
+#     - name: Verify deployment
+#       run: |
+#         echo "🔍 Verifying deployment..."
+#         echo "✅ Deployment completed successfully! Services are running on EC2."
+#         echo "🌐 API available at: http://$EC2_HOST:8001/api/"
+#         echo "Note: External access requires security group configuration for port 8001"
 
-    - name: Cleanup SSH key
-      if: always()
-      run: |
-        rm -f ~/.ssh/keynest-prod-key.pem
+#     - name: Cleanup SSH key
+#       if: always()
+#       run: |
+#         rm -f ~/.ssh/keynest-prod-key.pem
 
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ "${{ job.status }}" = "success" ]; then
-          echo "🎉 Deployment to EC2 ($EC2_HOST) completed successfully!"
-          echo "🌐 API available at: http://$EC2_HOST:8001/api/"
-        else
-          echo "💥 Deployment failed! Check the logs above for details."
-        fi
+#     - name: Notify deployment status
+#       if: always()
+#       run: |
+#         if [ "${{ job.status }}" = "success" ]; then
+#           echo "🎉 Deployment to EC2 ($EC2_HOST) completed successfully!"
+#           echo "🌐 API available at: http://$EC2_HOST:8001/api/"
+#         else
+#           echo "💥 Deployment failed! Check the logs above for details."
+#         fi
