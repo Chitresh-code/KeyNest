@@ -37,7 +37,7 @@ services:
       - RATELIMIT_ENABLE=${RATELIMIT_ENABLE:-True}
       - SITE_NAME=${SITE_NAME:-KeyNest}
       - SITE_URL=${SITE_URL:-http://localhost:8001}
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-keynest.settings}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-KeyNest.settings}
     volumes:
       - ./logs:/app/logs
       - ./static:/app/static
