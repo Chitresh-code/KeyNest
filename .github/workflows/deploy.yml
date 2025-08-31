@@ -86,8 +86,19 @@ jobs:
         # Set DATABASE_URL environment variable for deployment
         export DATABASE_URL="$DATABASE_URL"
         
-        # Run the deployment script with external database
-        /home/ubuntu/KeyNest/backend/scripts/deploy.sh
+        # Run the deployment using docker-compose
+        cd /home/ubuntu/KeyNest/backend
+        docker-compose down --volumes --remove-orphans 2>/dev/null || true
+        docker-compose pull
+        docker-compose up -d --build
+        
+        # Wait for services to be ready
+        sleep 30
+        
+        # Run database migrations
+        docker-compose exec -T api python manage.py makemigrations --noinput
+        docker-compose exec -T api python manage.py migrate --noinput
+        docker-compose exec -T api python manage.py collectstatic --noinput
         
         echo "✅ Deployment workflow completed!"
         DEPLOY_SCRIPT

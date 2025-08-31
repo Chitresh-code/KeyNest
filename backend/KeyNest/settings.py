@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import environ
+import dj_database_url
 from cryptography.fernet import Fernet
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -92,18 +93,10 @@ WSGI_APPLICATION = 'KeyNest.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# Database configuration using DATABASE_URL
+DATABASE_URL = env('DATABASE_URL', default='postgresql://keynest_dev:dev_password@db:5432/keynest_dev')
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME', default='keynest_dev'),
-        'USER': env('DB_USER', default='keynest_dev'),
-        'PASSWORD': env('DB_PASSWORD', default='dev_password'),
-        'HOST': env('DB_HOST', default='db'),
-        'PORT': env('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'client_encoding': 'UTF8',
-        },
-    }
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
 }
 
 
@@ -320,11 +313,7 @@ CACHES = {
 
 # Database Connection Pooling for Production
 if not DEBUG:
-    DATABASES['default']['CONN_MAX_AGE'] = 60
-    DATABASES['default']['OPTIONS'] = {
-        'MAX_CONNS': 20,
-        'MIN_CONNS': 5,
-    }
+    DATABASES['default']['CONN_MAX_AGE'] = 600
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
