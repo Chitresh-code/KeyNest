@@ -57,7 +57,7 @@ export function useVariable(variableId: number) {
   return useQuery({
     queryKey: ['variables', variableId],
     queryFn: async () => {
-      const response = await api.get<EnvVariable>(`${API_CONFIG.endpoints.variables}${variableId}/`);
+      const response = await api.get<EnvVariable>(`${API_CONFIG.endpoints.core.variables}${variableId}/`);
       return response.data;
     },
     enabled: !!variableId,
@@ -70,7 +70,7 @@ export function useCreateVariable() {
 
   return useMutation({
     mutationFn: async (data: CreateVariableData) => {
-      const response = await api.post<EnvVariable>(API_CONFIG.endpoints.variables, data);
+      const response = await api.post<EnvVariable>(API_CONFIG.endpoints.core.variables, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -94,7 +94,7 @@ export function useUpdateVariable() {
 
   return useMutation({
     mutationFn: async ({ variableId, data }: { variableId: number; data: UpdateVariableData }) => {
-      const response = await api.patch<EnvVariable>(`${API_CONFIG.endpoints.variables}${variableId}/`, data);
+      const response = await api.patch<EnvVariable>(`${API_CONFIG.endpoints.core.variables}${variableId}/`, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -119,7 +119,7 @@ export function useDeleteVariable() {
 
   return useMutation({
     mutationFn: async (variableId: number) => {
-      await api.delete(`${API_CONFIG.endpoints.variables}${variableId}/`);
+      await api.delete(`${API_CONFIG.endpoints.core.variables}${variableId}/`);
       return variableId;
     },
     onSuccess: (variableId) => {

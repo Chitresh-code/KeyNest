@@ -10,6 +10,12 @@ import type {
   AuthResponse,
   User,
   ApiError,
+  OAuthRequest,
+  PasswordResetRequest,
+  PasswordResetConfirmRequest,
+  PasswordChangeRequest,
+  AccountActivationRequest,
+  InvitationAcceptRequest,
 } from '@/types';
 
 // API Functions
@@ -32,6 +38,46 @@ const authApi = {
     const response = await apiClient.get(API_CONFIG.endpoints.auth.profile);
     return response.data;
   },
+
+  googleOAuth: async (data: OAuthRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post(API_CONFIG.endpoints.auth.oauth.google, data);
+    return response.data;
+  },
+
+  githubOAuth: async (data: OAuthRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post(API_CONFIG.endpoints.auth.oauth.github, data);
+    return response.data;
+  },
+
+  passwordResetRequest: async (data: PasswordResetRequest): Promise<{message: string}> => {
+    const response = await apiClient.post(API_CONFIG.endpoints.auth.passwordReset, data);
+    return response.data;
+  },
+
+  passwordResetConfirm: async (data: PasswordResetConfirmRequest): Promise<{message: string}> => {
+    const response = await apiClient.post(API_CONFIG.endpoints.auth.passwordResetConfirm, data);
+    return response.data;
+  },
+
+  changePassword: async (data: PasswordChangeRequest): Promise<{message: string}> => {
+    const response = await apiClient.post(API_CONFIG.endpoints.auth.changePassword, data);
+    return response.data;
+  },
+
+  activateAccount: async (data: AccountActivationRequest): Promise<{message: string}> => {
+    const response = await apiClient.post(API_CONFIG.endpoints.auth.activate, data);
+    return response.data;
+  },
+
+  acceptInvitation: async (data: InvitationAcceptRequest): Promise<{message: string}> => {
+    const response = await apiClient.post(API_CONFIG.endpoints.auth.invitations.accept, data);
+    return response.data;
+  },
+
+  getConfig: async (): Promise<any> => {
+    const response = await apiClient.get(API_CONFIG.endpoints.auth.config);
+    return response.data;
+  },
 };
 
 // Custom Hooks
@@ -45,8 +91,7 @@ export const useRegister = () => {
       // Store auth data
       setAuth(data);
       
-      // Store token in localStorage for API client
-      localStorage.setItem('keynest_token', data.token);
+      // Tokens are stored by setAuth in the store
       
       // Show success message
       toast.success('Account created successfully! Welcome to KeyNest.');
@@ -88,8 +133,7 @@ export const useLogin = () => {
       // Store auth data
       setAuth(data);
       
-      // Store token in localStorage for API client
-      localStorage.setItem('keynest_token', data.token);
+      // Tokens are stored by setAuth in the store
       
       // Show success message
       toast.success(`Welcome back, ${data.user.first_name || data.user.username}!`);
@@ -162,14 +206,119 @@ export const useProfile = () => {
 // Utility function to check authentication status
 export const useAuthCheck = () => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const token = useAuthStore(state => state.token);
+  const accessToken = useAuthStore(state => state.accessToken);
+  const refreshToken = useAuthStore(state => state.refreshToken);
   const user = useAuthStore(state => state.user);
 
-  const isFullyAuthenticated = isAuthenticated && token && user;
+  const isFullyAuthenticated = isAuthenticated && accessToken && refreshToken && user;
 
   return {
     isAuthenticated: isFullyAuthenticated,
     user,
-    token,
+    accessToken,
+    refreshToken,
   };
+};
+
+export const useGoogleOAuth = () => {
+  const router = useRouter();
+  const setAuth = useAuthStore(state => state.setAuth);
+
+  return useMutation({
+    mutationFn: authApi.googleOAuth,
+    onSuccess: (data: AuthResponse) => {
+      setAuth(data);
+      toast.success(`Welcome, ${data.user.first_name || data.user.username}!`);
+      router.push(ROUTES.dashboard);
+    },
+    onError: (error: any) => {
+      console.error('Google OAuth error:', error);
+      const apiError = error as { data?: ApiError; message?: string };
+      
+      if (apiError.data?.error) {
+        toast.error(apiError.data.error);
+      } else if (apiError.data?.detail) {
+        toast.error(apiError.data.detail);
+      } else {
+        toast.error('Google login failed. Please try again.');
+      }
+    },
+  });
+};
+
+export const useGitHubOAuth = () => {
+  const router = useRouter();
+  const setAuth = useAuthStore(state => state.setAuth);
+
+  return useMutation({
+    mutationFn: authApi.githubOAuth,
+    onSuccess: (data: AuthResponse) => {
+      setAuth(data);
+      toast.success(`Welcome, ${data.user.first_name || data.user.username}!`);
+      router.push(ROUTES.dashboard);
+    },
+    onError: (error: any) => {
+      console.error('GitHub OAuth error:', error);
+      const apiError = error as { data?: ApiError; message?: string };
+      
+      if (apiError.data?.error) {
+        toast.error(apiError.data.error);
+      } else if (apiError.data?.detail) {
+        toast.error(apiError.data.detail);
+      } else {
+        toast.error('GitHub login failed. Please try again.');
+      }
+    },
+  });
+};
+
+export const usePasswordResetRequest = () => {
+  return useMutation({
+    mutationFn: authApi.passwordResetRequest,
+    onSuccess: (data) => {
+      toast.success(data.message || 'Password reset email sent successfully!');
+    },
+    onError: (error: any) => {
+      console.error('Password reset request error:', error);
+      const apiError = error as { data?: ApiError; message?: string };
+      
+      if (apiError.data?.error) {
+        toast.error(apiError.data.error);
+      } else if (apiError.data?.detail) {
+        toast.error(apiError.data.detail);
+      } else {
+        toast.error('Failed to send password reset email. Please try again.');
+      }
+    },
+  });
+};
+
+export const usePasswordResetConfirm = () => {
+  const router = useRouter();
+  
+  return useMutation({
+    mutationFn: authApi.passwordResetConfirm,
+    onSuccess: (data) => {
+      toast.success(data.message || 'Password reset successfully! You can now login with your new password.');
+      router.push(ROUTES.login);
+    },
+    onError: (error: any) => {
+      console.error('Password reset confirm error:', error);
+      const apiError = error as { data?: ApiError; message?: string };
+      
+      if (apiError.data?.details) {
+        Object.entries(apiError.data.details).forEach(([field, messages]) => {
+          if (Array.isArray(messages) && messages.length > 0) {
+            toast.error(`${field}: ${messages[0]}`);
+          }
+        });
+      } else if (apiError.data?.error) {
+        toast.error(apiError.data.error);
+      } else if (apiError.data?.detail) {
+        toast.error(apiError.data.detail);
+      } else {
+        toast.error('Failed to reset password. Please try again.');
+      }
+    },
+  });
 };

@@ -35,7 +35,7 @@ export function useOrganizations() {
   return useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
-      const response = await api.get<OrganizationsResponse>(API_CONFIG.endpoints.organizations);
+      const response = await api.get<OrganizationsResponse>(API_CONFIG.endpoints.core.organizations);
       return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -46,7 +46,7 @@ export function useOrganization(organizationId: number) {
   return useQuery({
     queryKey: ['organizations', organizationId],
     queryFn: async () => {
-      const response = await api.get<Organization>(`${API_CONFIG.endpoints.organizations}${organizationId}/`);
+      const response = await api.get<Organization>(`${API_CONFIG.endpoints.core.organizations}${organizationId}/`);
       return response.data;
     },
     enabled: !!organizationId,
@@ -59,7 +59,7 @@ export function useCreateOrganization() {
 
   return useMutation({
     mutationFn: async (data: CreateOrganizationData) => {
-      const response = await api.post<Organization>(API_CONFIG.endpoints.organizations, data);
+      const response = await api.post<Organization>(API_CONFIG.endpoints.core.organizations, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -80,7 +80,7 @@ export function useUpdateOrganization() {
 
   return useMutation({
     mutationFn: async ({ organizationId, data }: { organizationId: number; data: UpdateOrganizationData }) => {
-      const response = await api.patch<Organization>(`${API_CONFIG.endpoints.organizations}${organizationId}/`, data);
+      const response = await api.patch<Organization>(`${API_CONFIG.endpoints.core.organizations}${organizationId}/`, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -102,7 +102,7 @@ export function useDeleteOrganization() {
 
   return useMutation({
     mutationFn: async (organizationId: number) => {
-      await api.delete(`${API_CONFIG.endpoints.organizations}${organizationId}/`);
+      await api.delete(`${API_CONFIG.endpoints.core.organizations}${organizationId}/`);
       return organizationId;
     },
     onSuccess: (organizationId) => {
@@ -141,7 +141,7 @@ export function useOrganizationMembers(organizationId: number) {
   return useQuery({
     queryKey: ['organizations', organizationId, 'members'],
     queryFn: async () => {
-      const response = await api.get<{ members: OrganizationMember[], total_count: number }>(`${API_CONFIG.endpoints.organizations}${organizationId}/members/`);
+      const response = await api.get<{ members: OrganizationMember[], total_count: number }>(`${API_CONFIG.endpoints.core.organizations}${organizationId}/members/`);
       return response.data;
     },
     enabled: !!organizationId,
@@ -154,7 +154,7 @@ export function useInviteUser() {
 
   return useMutation({
     mutationFn: async ({ organizationId, data }: { organizationId: number; data: InviteUserData }) => {
-      const response = await api.post(`${API_CONFIG.endpoints.organizations}${organizationId}/invite_member/`, data);
+      const response = await api.post(`${API_CONFIG.endpoints.core.organizations}${organizationId}/invite_member/`, data);
       return response.data;
     },
     onSuccess: (data, { organizationId }) => {
@@ -186,7 +186,7 @@ export function useUpdateMemberRole() {
       userId: number; 
       role: 'admin' | 'editor' | 'viewer'
     }) => {
-      const response = await api.patch(`${API_CONFIG.endpoints.organizations}${organizationId}/update_member_role/`, {
+      const response = await api.patch(`${API_CONFIG.endpoints.core.organizations}${organizationId}/update_member_role/`, {
         user_id: userId,
         role
       });
@@ -211,7 +211,7 @@ export function useRemoveMember() {
 
   return useMutation({
     mutationFn: async ({ organizationId, userId }: { organizationId: number; userId: number }) => {
-      await api.delete(`${API_CONFIG.endpoints.organizations}${organizationId}/remove_member/`, {
+      await api.delete(`${API_CONFIG.endpoints.core.organizations}${organizationId}/remove_member/`, {
         data: { user_id: userId }
       });
       return userId;

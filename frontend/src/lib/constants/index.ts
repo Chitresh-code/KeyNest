@@ -16,19 +16,35 @@ export const APP_CONFIG = {
 } as const;
 
 export const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
   endpoints: {
     auth: {
       register: '/api/auth/register/',
       login: '/api/auth/login/',
       logout: '/api/auth/logout/',
       profile: '/api/auth/profile/',
+      refresh: '/api/auth/token/refresh/',
+      activate: '/api/auth/activate/',
+      passwordReset: '/api/auth/password-reset/',
+      passwordResetConfirm: '/api/auth/password-reset-confirm/',
+      changePassword: '/api/auth/change-password/',
+      oauth: {
+        google: '/api/auth/oauth/google/',
+        github: '/api/auth/oauth/github/',
+      },
+      config: '/api/auth/config/',
+      status: '/api/auth/status/',
+      invitations: {
+        accept: '/api/auth/invitations/accept/',
+      },
     },
-    organizations: '/api/organizations/',
-    projects: '/api/projects/',
-    environments: '/api/environments/',
-    variables: '/api/variables/',
-    auditLogs: '/api/audit-logs/',
+    core: {
+      organizations: '/api/core/organizations/',
+      projects: '/api/core/projects/',
+      environments: '/api/core/environments/',
+      variables: '/api/core/variables/',
+      auditLogs: '/api/core/audit-logs/',
+    },
   },
 } as const;
 

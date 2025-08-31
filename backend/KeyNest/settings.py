@@ -53,21 +53,37 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Third-party apps
     'rest_framework',
-    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'oauth2_provider',
+    'django_celery_beat',
+    'django_celery_results',
+    'django_ratelimit',
+    'axes',
+    
+    # Local apps
     'core',
     'authentication',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',
+    'core.middleware.InputSanitizationMiddleware',
+    'core.middleware.RequestLoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'oauth2_provider.middleware.OAuth2TokenMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.RateLimitHeaderMiddleware',
+    'core.middleware.APIResponseMiddleware',
 ]
 
 ROOT_URLCONF = 'KeyNest.urls'
@@ -148,7 +164,8 @@ AUTH_USER_MODEL = 'core.User'
 # Django REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -159,6 +176,14 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
 }
 
 # CORS settings
@@ -167,15 +192,17 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     'http://127.0.0.1:3000',
     'http://localhost:3001',
     'http://127.0.0.1:3001',
+    'http://localhost:5173',  # Vite default port
+    'http://127.0.0.1:5173',
     'https://key-nest-iota.vercel.app',
     'https://envnest.shop',
     'https://www.envnest.shop',
 ])
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # keep strict
+CORS_ALLOW_ALL_ORIGINS = env('CORS_ALLOW_ALL_ORIGINS', default=False)  # Keep strict by default
 
-# More explicit CORS headers
+# Comprehensive CORS headers for modern frontend frameworks
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -186,6 +213,19 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'x-api-key',
+    'cache-control',
+    'pragma',
+    'if-modified-since',
+]
+
+# Expose additional headers to frontend
+CORS_EXPOSE_HEADERS = [
+    'x-api-version',
+    'x-response-time',
+    'x-timestamp',
+    'x-rate-limit-remaining',
+    'x-rate-limit-reset',
 ]
 
 CORS_ALLOW_METHODS = [
@@ -214,11 +254,18 @@ CSRF_TRUSTED_ORIGINS = [
 JWT_SECRET_KEY = env('JWT_SECRET_KEY', default=SECRET_KEY)
 JWT_EXPIRATION_DELTA = 86400  # 24 hours
 
-# Production Security Settings
+# ==================================================
+# COMPREHENSIVE SECURITY SETTINGS
+# ==================================================
+
+# SSL/TLS Security
 SECURE_SSL_REDIRECT = env('SECURE_SSL_REDIRECT', default=not DEBUG)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS = env('SECURE_HSTS_SECONDS', default=31536000 if not DEBUG else 0)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=not DEBUG)
 SECURE_HSTS_PRELOAD = env('SECURE_HSTS_PRELOAD', default=not DEBUG)
+
+# Content Security
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
@@ -228,7 +275,19 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SESSION_COOKIE_SECURE = env('SESSION_COOKIE_SECURE', default=not DEBUG)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# CSRF Security
 CSRF_COOKIE_SECURE = env('CSRF_COOKIE_SECURE', default=not DEBUG)
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_AGE = 3600
+
+# Additional Security Headers
+USE_TZ = True
+SECURE_REDIRECT_EXEMPT = []
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Strict'
 
@@ -288,26 +347,46 @@ LOGGING = {
     },
 }
 
-# Only add file handlers in DEBUG mode
-if DEBUG:
-    LOGGING['handlers'].update({
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'keynest.log',
-            'formatter': 'verbose',
-        },
-        'security_file': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'security.log',
-            'formatter': 'verbose',
-        },
-    })
-    LOGGING['root']['handlers'].append('file')
-    LOGGING['loggers']['django.security']['handlers'].append('security_file')
-    LOGGING['loggers']['authentication']['handlers'].extend(['file', 'security_file'])
-    LOGGING['loggers']['core']['handlers'].append('file')
+# Add file handlers (production and debug)
+LOGGING['handlers'].update({
+    'file': {
+        'level': 'INFO',
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': BASE_DIR / 'logs' / 'keynest.log',
+        'maxBytes': 1024*1024*10,  # 10 MB
+        'backupCount': 5,
+        'formatter': 'verbose',
+    },
+    'security_file': {
+        'level': 'WARNING',
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': BASE_DIR / 'logs' / 'security.log',
+        'maxBytes': 1024*1024*5,  # 5 MB
+        'backupCount': 10,
+        'formatter': 'verbose',
+    },
+    'error_file': {
+        'level': 'ERROR',
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': BASE_DIR / 'logs' / 'errors.log',
+        'maxBytes': 1024*1024*5,  # 5 MB
+        'backupCount': 10,
+        'formatter': 'verbose',
+    },
+})
+
+# Enhanced logging for security monitoring
+LOGGING['root']['handlers'].extend(['file', 'error_file'])
+LOGGING['loggers']['django.security']['handlers'].extend(['security_file', 'error_file'])
+LOGGING['loggers']['authentication']['handlers'].extend(['file', 'security_file'])
+LOGGING['loggers']['core']['handlers'].extend(['file'])
+
+# Add AXES logger
+LOGGING['loggers']['axes'] = {
+    'handlers': ['security_file'],
+    'level': 'WARNING',
+    'propagate': False,
+}
 
 # Email Configuration for Production
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
@@ -338,3 +417,209 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Media files (user uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# ==================================================
+# JWT AUTHENTICATION CONFIGURATION
+# ==================================================
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': env('JWT_ISSUER', default='keynest'),
+    'JSON_ENCODER': None,
+    'JTI_CLAIM': 'jti',
+    
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=60),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+    
+    'TOKEN_OBTAIN_SERIALIZER': 'authentication.serializers.CustomTokenObtainPairSerializer',
+    'TOKEN_REFRESH_SERIALIZER': 'authentication.serializers.CustomTokenRefreshSerializer',
+    'TOKEN_VERIFY_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenVerifySerializer',
+    'TOKEN_BLACKLIST_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenBlacklistSerializer',
+    'SLIDING_TOKEN_OBTAIN_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer',
+    'SLIDING_TOKEN_REFRESH_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer',
+}
+
+
+# ==================================================
+# OAUTH2 CONFIGURATION
+# ==================================================
+OAUTH2_PROVIDER = {
+    'SCOPES': {
+        'read': 'Read scope',
+        'write': 'Write scope',
+    },
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 3600 * 24 * 7,  # 7 days
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 600,
+    'ROTATE_REFRESH_TOKEN': True,
+}
+
+# OAuth Provider Settings
+GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID', default='')
+GOOGLE_OAUTH2_CLIENT_SECRET = env('GOOGLE_OAUTH2_CLIENT_SECRET', default='')
+
+GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', default='')
+GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', default='')
+
+
+# ==================================================
+# EMAIL CONFIGURATION
+# ==================================================
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = env('EMAIL_USE_SSL', default=False, cast=bool)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default=f'KeyNest <{EMAIL_HOST_USER}>')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Email Configuration for User Activation
+EMAIL_CONFIRMATION_TIMEOUT_DAYS = 3
+PASSWORD_RESET_TIMEOUT_DAYS = 1
+
+
+# ==================================================
+# CELERY CONFIGURATION
+# ==================================================
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Celery Task Settings
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 20 * 60
+CELERY_RESULT_EXPIRES = 3600
+
+# Email Task Configuration
+CELERY_EMAIL_TASK_CONFIG = {
+    'name': 'authentication.tasks.send_email_task',
+    'rate_limit': '50/m',
+    'routing_key': 'email',
+}
+
+
+# ==================================================
+# SECURITY CONFIGURATION
+# ==================================================
+
+# ==================================================
+# DJANGO AXES - ENHANCED LOGIN PROTECTION
+# ==================================================
+AXES_ENABLED = True
+AXES_FAILURE_LIMIT = env('AXES_FAILURE_LIMIT', default=5, cast=int)
+AXES_COOLOFF_TIME = env('AXES_COOLOFF_TIME', default=1, cast=int)  # hours
+AXES_LOCKOUT_TEMPLATE = None
+AXES_LOCKOUT_URL = None
+AXES_LOGIN_FAILURE_LIMIT = 5
+AXES_LOCK_OUT_AT_FAILURE = True
+
+# Updated AXES settings to fix deprecation warnings
+AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']  # Modern way to set lockout criteria
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_CALLABLE = None
+AXES_VERBOSE = True
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = True
+
+# Authentication backend for AXES
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# HTTPS Settings (Production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+# Session Configuration
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# CSRF Configuration
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_AGE = 31449600  # 1 year
+CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
+
+# Password Validation
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# ==================================================
+# SITE CONFIGURATION
+# ==================================================
+SITE_NAME = env('SITE_NAME', default='KeyNest')
+SITE_URL = env('SITE_URL', default='http://localhost:3000')
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+
+# URL Configuration for Activation/Reset Links
+ACTIVATION_URL = 'activate/{uid}/{token}/'
+PASSWORD_RESET_URL = 'reset-password/{uid}/{token}/'
+
+
+# ==================================================
+# INTERNATIONALIZATION
+# ==================================================
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+
+# ==================================================
+# DEVELOPMENT SETTINGS
+# ==================================================
+if DEBUG:
+    # Development-only settings
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    
+    # Allow all hosts in development
+    ALLOWED_HOSTS = ['*']
+    
+    # Disable HTTPS redirects in development
+    SECURE_SSL_REDIRECT = False

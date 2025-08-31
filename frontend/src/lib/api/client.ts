@@ -13,11 +13,11 @@ export const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   config => {
-    // Get token from localStorage (we'll implement this with zustand later)
+    // Get JWT access token from localStorage
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('keynest_token');
+      const token = localStorage.getItem('keynest_access_token');
       if (token) {
-        config.headers.Authorization = `Token ${token}`;
+        config.headers.Authorization = `Bearer ${token}`;
       }
     }
     return config;
@@ -27,18 +27,47 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and token refresh
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
-  (error: AxiosError) => {
-    // Handle common errors
-    if (error.response?.status === 401) {
-      // Clear token and redirect to login
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+    
+    // Handle 401 errors with token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('keynest_token');
-        window.location.href = ROUTES.login;
+        const refreshToken = localStorage.getItem('keynest_refresh_token');
+        
+        if (refreshToken) {
+          try {
+            // Attempt to refresh the token
+            const response = await axios.post(
+              `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`,
+              { refresh: refreshToken }
+            );
+            
+            const { access } = response.data;
+            localStorage.setItem('keynest_access_token', access);
+            
+            // Retry the original request with new token
+            originalRequest.headers.Authorization = `Bearer ${access}`;
+            return apiClient(originalRequest);
+          } catch (refreshError) {
+            // Refresh failed, clear tokens and redirect to login
+            localStorage.removeItem('keynest_access_token');
+            localStorage.removeItem('keynest_refresh_token');
+            window.location.href = ROUTES.login;
+            return Promise.reject(refreshError);
+          }
+        } else {
+          // No refresh token, redirect to login
+          localStorage.removeItem('keynest_access_token');
+          window.location.href = ROUTES.login;
+        }
       }
     }
     

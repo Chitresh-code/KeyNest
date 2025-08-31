@@ -16,7 +16,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from .models import (
-    Organization, OrganizationMembership, Project, 
+    Organization, OrganizationMembership, OrganizationInvitation, Project, 
     Environment, EnvVariable, AuditLog
 )
 from .serializers import (
@@ -25,6 +25,7 @@ from .serializers import (
 )
 from .permissions import HasOrganizationPermission, HasProjectPermission, HasEnvironmentPermission
 from .utils import parse_env_file, validate_env_data, get_client_ip
+from authentication.tasks import send_organization_invitation, send_project_notification
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -147,66 +148,100 @@ class OrganizationViewSet(BaseKeyNestViewSet):
                     'error': 'Organization has reached the maximum number of members'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Find user by email - use consistent response to prevent email enumeration
+            # Check if user is already a member (for existing users)
+            existing_user = None
             try:
-                invited_user = User.objects.get(email=email)
+                existing_user = User.objects.get(email=email)
+                if OrganizationMembership.objects.filter(
+                    user=existing_user,
+                    organization=organization
+                ).exists():
+                    return Response({
+                        'error': 'User is already a member of this organization'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Prevent self-invitation edge case
+                if existing_user == request.user:
+                    return Response({
+                        'error': 'You cannot invite yourself'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             except User.DoesNotExist:
-                # Log the attempt but don't reveal that user doesn't exist
-                logger.info(f"Invitation attempt for non-existent user {email} by {request.user.email}")
+                # User doesn't exist yet, which is fine for invitations
+                pass
+            
+            # Check if there's already a pending invitation
+            existing_invitation = OrganizationInvitation.objects.filter(
+                organization=organization,
+                invitee_email=email,
+                status='pending'
+            ).first()
+            
+            if existing_invitation and not existing_invitation.is_expired():
                 return Response({
-                    'error': 'Unable to invite user. Please ensure the email is correct and the user has an account.'
+                    'error': 'A pending invitation already exists for this email'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Check if user is already a member
-            if OrganizationMembership.objects.filter(
-                user=invited_user,
-                organization=organization
-            ).exists():
-                return Response({
-                    'error': 'User is already a member of this organization'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            # Generate unique invitation token
+            import secrets
+            invitation_token = secrets.token_urlsafe(32)
             
-            # Prevent self-invitation edge case
-            if invited_user == request.user:
-                return Response({
-                    'error': 'You cannot invite yourself'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            # Set expiration (7 days from now)
+            from django.utils import timezone
+            from datetime import timedelta
+            expires_at = timezone.now() + timedelta(days=7)
             
-            # Create membership with transaction
+            # Create invitation with transaction
             with transaction.atomic():
-                membership = OrganizationMembership.objects.create(
-                    user=invited_user,
+                # Cancel any existing invitations
+                if existing_invitation:
+                    existing_invitation.status = 'cancelled'
+                    existing_invitation.save()
+                
+                # Create new invitation
+                invitation = OrganizationInvitation.objects.create(
                     organization=organization,
-                    role=role
+                    inviter=request.user,
+                    invitee_email=email,
+                    role=role,
+                    token=invitation_token,
+                    expires_at=expires_at
+                )
+                
+                # Send invitation email
+                send_organization_invitation.delay(
+                    inviter_id=request.user.id,
+                    invitee_email=email,
+                    organization_name=organization.name,
+                    invitation_token=invitation_token
                 )
                 
                 # Log invitation with detailed audit trail
                 AuditLog.objects.create(
                     user=request.user,
                     action='create',
-                    target_type='membership',
+                    target_type='invitation',
                     target_id=str(organization.id),
                     details={
-                        'invited_user_id': invited_user.id,
-                        'invited_user_email': invited_user.email,
+                        'invitee_email': email,
                         'role': role,
                         'organization_id': organization.id,
                         'organization_name': organization.name,
-                        'invitation_method': 'admin_invite'
+                        'invitation_method': 'email_invite',
+                        'expires_at': expires_at.isoformat()
                     },
                     ip_address=get_client_ip(request)
                 )
                 
-                logger.info(f"User {invited_user.email} invited to organization {organization.name} as {role} by {request.user.email}")
+                logger.info(f"Invitation sent to {email} for organization {organization.name} as {role} by {request.user.email}")
             
             return Response({
-                'message': f'User has been added to {organization.name} as {role}',
-                'member': {
-                    'id': invited_user.id,
-                    'email': invited_user.email,
-                    'username': invited_user.username,
+                'message': f'Invitation sent to {email} for {organization.name}',
+                'invitation': {
+                    'email': email,
                     'role': role,
-                    'joined_at': membership.joined_at.isoformat()
+                    'organization': organization.name,
+                    'expires_at': expires_at.isoformat(),
+                    'status': 'pending'
                 }
             }, status=status.HTTP_201_CREATED)
             
@@ -383,6 +418,14 @@ class OrganizationViewSet(BaseKeyNestViewSet):
                 member_membership.role = new_role
                 member_membership.save()
                 
+                # Send notification to the user whose role was changed
+                send_project_notification.delay(
+                    user_id=member_membership.user.id,
+                    project_name=organization.name,
+                    notification_type='member_updated',
+                    message=f'Your role in "{organization.name}" has been updated from {old_role} to {new_role} by {request.user.username}.'
+                )
+                
                 # Log role update with comprehensive details
                 AuditLog.objects.create(
                     user=request.user,
@@ -492,6 +535,14 @@ class OrganizationViewSet(BaseKeyNestViewSet):
             member_role = member_membership.role
             
             with transaction.atomic():
+                # Send notification to the removed user
+                send_project_notification.delay(
+                    user_id=user_id,
+                    project_name=organization.name,
+                    notification_type='member_removed',
+                    message=f'You have been removed from "{organization.name}" by {request.user.username}.'
+                )
+                
                 member_membership.delete()
                 
                 # Log removal with comprehensive details
@@ -563,7 +614,7 @@ class ProjectViewSet(BaseKeyNestViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        """Create project with audit logging"""
+        """Create project with audit logging and notifications"""
         with transaction.atomic():
             project = serializer.save(created_by=self.request.user)
             
@@ -580,7 +631,64 @@ class ProjectViewSet(BaseKeyNestViewSet):
                 ip_address=get_client_ip(self.request)
             )
             
+            # Send notifications to organization members
+            organization_members = OrganizationMembership.objects.filter(
+                organization=project.organization
+            ).exclude(user=self.request.user).select_related('user')
+            
+            for membership in organization_members:
+                send_project_notification.delay(
+                    user_id=membership.user.id,
+                    project_name=project.name,
+                    notification_type='created',
+                    message=f'New project "{project.name}" has been created by {self.request.user.username} in {project.organization.name}.'
+                )
+            
             logger.info(f"Project created: {project.name} by {self.request.user.email}")
+    
+    def perform_update(self, serializer):
+        """Update project with notifications"""
+        old_name = serializer.instance.name
+        with transaction.atomic():
+            project = serializer.save()
+            
+            # Send notifications if project name changed
+            if old_name != project.name:
+                organization_members = OrganizationMembership.objects.filter(
+                    organization=project.organization
+                ).exclude(user=self.request.user).select_related('user')
+                
+                for membership in organization_members:
+                    send_project_notification.delay(
+                        user_id=membership.user.id,
+                        project_name=project.name,
+                        notification_type='updated',
+                        message=f'Project "{old_name}" has been renamed to "{project.name}" by {self.request.user.username}.'
+                    )
+            
+            logger.info(f"Project updated: {project.name} by {self.request.user.email}")
+    
+    def perform_destroy(self, instance):
+        """Delete project with notifications"""
+        project_name = instance.name
+        organization = instance.organization
+        
+        with transaction.atomic():
+            # Send notifications before deletion
+            organization_members = OrganizationMembership.objects.filter(
+                organization=organization
+            ).exclude(user=self.request.user).select_related('user')
+            
+            for membership in organization_members:
+                send_project_notification.delay(
+                    user_id=membership.user.id,
+                    project_name=project_name,
+                    notification_type='deleted',
+                    message=f'Project "{project_name}" has been deleted by {self.request.user.username}.'
+                )
+            
+            super().perform_destroy(instance)
+            logger.info(f"Project deleted: {project_name} by {self.request.user.email}")
 
 
 class EnvironmentViewSet(BaseKeyNestViewSet):

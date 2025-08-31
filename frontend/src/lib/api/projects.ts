@@ -42,7 +42,7 @@ export function useProjects(params?: { organization?: number }) {
         searchParams.append('organization', params.organization.toString());
       }
       
-      const base = API_CONFIG.endpoints.projects;
+      const base = API_CONFIG.endpoints.core.projects;
       const url = searchParams.toString()
         ? `${base}?${searchParams.toString()}`
         : base;
@@ -58,7 +58,7 @@ export function useProject(projectId: number) {
   return useQuery({
     queryKey: ['projects', projectId],
     queryFn: async () => {
-      const response = await api.get<Project>(`${API_CONFIG.endpoints.projects}${projectId}/`);
+      const response = await api.get<Project>(`${API_CONFIG.endpoints.core.projects}${projectId}/`);
       return response.data;
     },
     enabled: !!projectId,
@@ -71,7 +71,7 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: async (data: CreateProjectData) => {
-      const response = await api.post<Project>(API_CONFIG.endpoints.projects, data);
+      const response = await api.post<Project>(API_CONFIG.endpoints.core.projects, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -93,7 +93,7 @@ export function useUpdateProject() {
 
   return useMutation({
     mutationFn: async ({ projectId, data }: { projectId: number; data: UpdateProjectData }) => {
-      const response = await api.patch<Project>(`${API_CONFIG.endpoints.projects}${projectId}/`, data);
+      const response = await api.patch<Project>(`${API_CONFIG.endpoints.core.projects}${projectId}/`, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -116,7 +116,7 @@ export function useDeleteProject() {
 
   return useMutation({
     mutationFn: async (projectId: number) => {
-      await api.delete(`${API_CONFIG.endpoints.projects}${projectId}/`);
+      await api.delete(`${API_CONFIG.endpoints.core.projects}${projectId}/`);
       return projectId;
     },
     onSuccess: (projectId) => {

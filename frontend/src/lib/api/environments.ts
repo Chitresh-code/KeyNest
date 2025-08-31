@@ -45,7 +45,7 @@ export function useEnvironments(params?: { project?: number }) {
         searchParams.append('project', params.project.toString());
       }
       
-      const base = API_CONFIG.endpoints.environments;
+      const base = API_CONFIG.endpoints.core.environments;
       const url = searchParams.toString() 
         ? `${base}?${searchParams.toString()}`
         : base;
@@ -73,7 +73,7 @@ export function useEnvironment(environmentId: number) {
   return useQuery({
     queryKey: ['environments', environmentId],
     queryFn: async () => {
-      const response = await api.get<Environment>(`${API_CONFIG.endpoints.environments}${environmentId}/`);
+      const response = await api.get<Environment>(`${API_CONFIG.endpoints.core.environments}${environmentId}/`);
       return response.data;
     },
     enabled: !!environmentId,
@@ -95,7 +95,7 @@ export function useCreateEnvironment() {
 
   return useMutation({
     mutationFn: async (data: CreateEnvironmentData) => {
-      const response = await api.post<Environment>(API_CONFIG.endpoints.environments, data);
+      const response = await api.post<Environment>(API_CONFIG.endpoints.core.environments, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -118,7 +118,7 @@ export function useUpdateEnvironment() {
 
   return useMutation({
     mutationFn: async ({ environmentId, data }: { environmentId: number; data: UpdateEnvironmentData }) => {
-      const response = await api.patch<Environment>(`${API_CONFIG.endpoints.environments}${environmentId}/`, data);
+      const response = await api.patch<Environment>(`${API_CONFIG.endpoints.core.environments}${environmentId}/`, data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -142,7 +142,7 @@ export function useDeleteEnvironment() {
 
   return useMutation({
     mutationFn: async (environmentId: number) => {
-      await api.delete(`${API_CONFIG.endpoints.environments}${environmentId}/`);
+      await api.delete(`${API_CONFIG.endpoints.core.environments}${environmentId}/`);
       return environmentId;
     },
     onSuccess: (environmentId) => {

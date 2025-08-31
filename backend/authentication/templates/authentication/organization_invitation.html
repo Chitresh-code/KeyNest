@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Invited to Join {{ organization_name }}!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #7c3aed;
+            margin-bottom: 10px;
+        }
+        .title {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .invitation-button {
+            display: inline-block;
+            background-color: #7c3aed;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .invitation-button:hover {
+            background-color: #6d28d9;
+        }
+        .alternative-link {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+        }
+        .invitation-details {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .invitation-details h3 {
+            color: #374151;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .detail-item {
+            margin-bottom: 10px;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .detail-value {
+            color: #6b7280;
+        }
+        .benefits {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .benefits h3 {
+            color: #0c4a6e;
+            margin-top: 0;
+        }
+        .benefits ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .benefits li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">{{ site_name }}</div>
+            <h1 class="title">You're Invited!</h1>
+        </div>
+
+        <div class="content">
+            <p>Hello!</p>
+            
+            <p><strong>{{ inviter.username }}</strong> ({{ inviter.email }}) has invited you to join <strong>{{ organization_name }}</strong> on {{ site_name }}.</p>
+
+            <div class="invitation-details">
+                <h3>📋 Invitation Details</h3>
+                <div class="detail-item">
+                    <span class="detail-label">Organization:</span>
+                    <span class="detail-value">{{ organization_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Invited by:</span>
+                    <span class="detail-value">{{ inviter.username }} ({{ inviter.email }})</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Invited to:</span>
+                    <span class="detail-value">{{ invitee_email }}</span>
+                </div>
+            </div>
+
+            <div class="benefits">
+                <h3>🌟 What you'll get access to:</h3>
+                <ul>
+                    <li>Collaborate on environment variable management</li>
+                    <li>Secure sharing of configuration settings</li>
+                    <li>Version control and change tracking</li>
+                    <li>Team-wide project visibility</li>
+                    <li>Role-based access controls</li>
+                </ul>
+            </div>
+            
+            <p>Click the button below to accept the invitation and join the organization:</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ invitation_url }}" class="invitation-button">Accept Invitation</a>
+            </div>
+
+            <p>If the button above doesn't work, you can copy and paste the following link into your browser:</p>
+            
+            <div class="alternative-link">
+                {{ invitation_url }}
+            </div>
+
+            <p><strong>Note:</strong> If you don't have a {{ site_name }} account yet, you'll be prompted to create one when you accept this invitation. The process is quick and secure!</p>
+
+            <p>This invitation will expire in 7 days. If you don't accept it within this time, {{ inviter.username }} will need to send you a new invitation.</p>
+
+            <p>If you weren't expecting this invitation or believe it was sent in error, you can safely ignore this email.</p>
+        </div>
+
+        <div class="footer">
+            <p>© {{ site_name }} Team</p>
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>If you need help, please contact our support team.</p>
+            <p><a href="{{ site_url }}" style="color: #6b7280;">Visit {{ site_name }}</a></p>
+        </div>
+    </div>
+</body>
+</html>

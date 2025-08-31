@@ -9,6 +9,7 @@ interface OrganizationState {
 
 interface OrganizationActions {
   setCurrentOrganization: (organization: Organization | null) => void;
+  switchOrganization: (organization: Organization) => void;
   setLoading: (loading: boolean) => void;
   clearOrganization: () => void;
 }
@@ -27,6 +28,19 @@ export const useOrganizationStore = create<OrganizationState & OrganizationActio
           currentOrganization: organization,
           isLoading: false,
         })),
+
+      switchOrganization: (organization) => {
+        set((state) => ({
+          ...state,
+          currentOrganization: organization,
+          isLoading: false,
+        }));
+        
+        // Redirect to dashboard to prevent access to other organization's data
+        if (typeof window !== 'undefined') {
+          window.location.href = '/dashboard';
+        }
+      },
 
       setLoading: (loading) =>
         set((state) => ({

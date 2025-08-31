@@ -33,12 +33,30 @@ def api_root(request):
     return JsonResponse({
         'message': 'Welcome to KeyNest API',
         'version': '1.0.0',
+        'description': 'Secure environment variable management platform',
+        'documentation': {
+            'status': '/api/auth/status/',
+            'config': '/api/auth/config/',
+        },
         'endpoints': {
             'authentication': '/api/auth/',
-            'projects': '/api/projects/',
+            'organizations': '/api/core/organizations/',
+            'projects': '/api/core/projects/',
+            'environments': '/api/core/environments/',
+            'variables': '/api/core/variables/',
             'health': '/health/',
             'admin': '/admin/',
-        }
+        },
+        'features': [
+            'JWT Authentication',
+            'OAuth (Google, GitHub)',
+            'Organization Management',
+            'Project Management',
+            'Environment Variables',
+            'Email Notifications',
+            'Audit Logging',
+            'File Import/Export'
+        ]
     })
 
 urlpatterns = [
@@ -51,8 +69,8 @@ urlpatterns = [
     # Authentication endpoints
     path('api/auth/', include('authentication.urls')),
     
-    # Core API endpoints (to be added)
-    path('api/', include('core.urls')),
+    # Core API endpoints
+    path('api/core/', include('core.urls')),
     
     # Admin interface
     path('admin/', admin.site.urls),

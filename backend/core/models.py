@@ -11,6 +11,10 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # OAuth fields
+    google_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    github_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -40,6 +44,49 @@ class OrganizationMembership(models.Model):
     
     class Meta:
         unique_together = ('user', 'organization')
+
+
+class OrganizationInvitation(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('editor', 'Editor'),
+        ('viewer', 'Viewer'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='invitations')
+    inviter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
+    invitee_email = models.EmailField()
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='viewer')
+    token = models.CharField(max_length=100, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('organization', 'invitee_email')
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['status']),
+            models.Index(fields=['expires_at']),
+        ]
+    
+    def __str__(self):
+        return f"Invitation to {self.invitee_email} for {self.organization.name}"
+    
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+    
+    def can_be_accepted(self):
+        return self.status == 'pending' and not self.is_expired()
 
 
 class Project(models.Model):

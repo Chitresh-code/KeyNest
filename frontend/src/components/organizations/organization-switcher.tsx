@@ -22,7 +22,7 @@ export default function OrganizationSwitcher() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const { data: organizationsData, isLoading } = useOrganizations();
-  const { currentOrganization, setCurrentOrganization } = useOrganizationStore();
+  const { currentOrganization, setCurrentOrganization, switchOrganization } = useOrganizationStore();
   
   const organizations = organizationsData?.results || [];
 
@@ -34,7 +34,12 @@ export default function OrganizationSwitcher() {
   }, [organizations, currentOrganization, setCurrentOrganization, isLoading]);
 
   const handleOrganizationSelect = (org: any) => {
-    setCurrentOrganization(org);
+    // If switching to a different organization, use switchOrganization to redirect
+    if (currentOrganization?.id !== org.id) {
+      switchOrganization(org);
+    } else {
+      setCurrentOrganization(org);
+    }
   };
 
   if (isLoading) {

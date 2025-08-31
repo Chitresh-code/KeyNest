@@ -12,11 +12,10 @@ export interface User {
 }
 
 export interface AuthResponse {
-  message: string;
-  token: string;
+  access: string;
+  refresh: string;
   user: User;
-  organization?: Organization;
-  organizations?: OrganizationMembership[];
+  message: string;
 }
 
 export interface LoginRequest {
@@ -31,6 +30,37 @@ export interface RegisterRequest {
   confirm_password: string;
   first_name: string;
   last_name: string;
+}
+
+export interface OAuthRequest {
+  access_token: string;
+  provider: 'google' | 'github';
+}
+
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetConfirmRequest {
+  uid: string;
+  token: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export interface PasswordChangeRequest {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export interface AccountActivationRequest {
+  uid: string;
+  token: string;
+}
+
+export interface InvitationAcceptRequest {
+  token: string;
 }
 
 // Organization types
