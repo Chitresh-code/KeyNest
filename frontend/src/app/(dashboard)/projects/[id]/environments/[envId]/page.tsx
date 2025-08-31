@@ -14,7 +14,8 @@ import {
   Copy, 
   Download, 
   Upload,
-  Key
+  Key,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,12 +37,13 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { useEnvironment } from '@/lib/api/environments';
-import { useEnvironmentVariables, useDeleteVariable, useExportEnvironment, useImportEnvironment } from '@/lib/api/variables';
+import { useEnvironmentVariables, useDeleteVariable, useExportEnvironment } from '@/lib/api/variables';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import CreateVariableDialog from '@/components/variables/create-variable-dialog';
 import EditVariableDialog from '@/components/variables/edit-variable-dialog';
 import DeleteConfirmDialog from '@/components/common/delete-confirm-dialog';
+import ImportEnvironmentDialog from '@/components/variables/import-environment-dialog';
 
 const environmentTypeColors = {
   development: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
@@ -53,22 +55,21 @@ const environmentTypeColors = {
 export default function EnvironmentVariablesPage() {
   const params = useParams();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const projectId = parseInt(params.id as string);
   const environmentId = parseInt(params.envId as string);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editVariable, setEditVariable] = useState<any>(null);
   const [deleteVariable, setDeleteVariable] = useState<any>(null);
   const [hiddenValues, setHiddenValues] = useState<Set<number>>(new Set());
 
-  const { data: environment, isLoading: environmentLoading } = useEnvironment(environmentId);
-  const { data: variablesData, isLoading: variablesLoading } = useEnvironmentVariables(environmentId);
+  const { data: environment, isLoading: environmentLoading, error: environmentError } = useEnvironment(environmentId);
+  const { data: variablesData, isLoading: variablesLoading, error: variablesError, refetch: refetchVariables } = useEnvironmentVariables(environmentId);
   const deleteVariableMutation = useDeleteVariable();
   const exportEnvironmentMutation = useExportEnvironment();
-  const importEnvironmentMutation = useImportEnvironment();
 
   const variables = variablesData?.results || [];
 
@@ -114,27 +115,27 @@ export default function EnvironmentVariablesPage() {
     exportEnvironmentMutation.mutate(environmentId);
   };
 
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      importEnvironmentMutation.mutate({ environmentId, file });
-      // Reset the input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
   if (environmentLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-muted-foreground">Loading environment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (environmentError) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">Failed to load environment</h2>
+        <p className="text-gray-600 dark:text-muted-foreground mb-4">
+          {environmentError.response?.data?.detail || 'An error occurred while loading the environment.'}
+        </p>
+        <div className="space-x-2">
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+          <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
         </div>
       </div>
     );
@@ -217,7 +218,7 @@ export default function EnvironmentVariablesPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleImportClick}>
+                <DropdownMenuItem onClick={() => setIsImportOpen(true)}>
                   <Upload className="h-4 w-4 mr-2" />
                   Import from .env
                 </DropdownMenuItem>
@@ -247,10 +248,52 @@ export default function EnvironmentVariablesPage() {
 
         {/* Variables Table */}
         {variablesLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600 dark:text-muted-foreground">Loading variables...</span>
+          <div className="space-y-4">
+            {/* Skeleton loading for variables */}
+            <Card>
+              <div className="p-6 space-y-4">
+                <div className="animate-pulse">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                  </div>
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                      </div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
           </div>
+        ) : variablesError ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <div className="text-red-500 mb-4">
+                <Key className="h-12 w-12 mx-auto opacity-50" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">
+                Failed to load variables
+              </h3>
+              <p className="text-gray-600 dark:text-muted-foreground mb-4">
+                {variablesError.response?.data?.detail || 'An error occurred while loading environment variables.'}
+              </p>
+              <div className="space-x-2">
+                <Button onClick={() => refetchVariables()} variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+                <Button onClick={() => setIsCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Variable
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : filteredVariables.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
@@ -372,19 +415,17 @@ export default function EnvironmentVariablesPage() {
         )}
       </div>
 
-      {/* Hidden file input for import */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="*"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
 
       {/* Dialogs */}
       <CreateVariableDialog 
         open={isCreateOpen} 
         onOpenChange={setIsCreateOpen}
+        environmentId={environmentId}
+      />
+
+      <ImportEnvironmentDialog 
+        open={isImportOpen} 
+        onOpenChange={setIsImportOpen}
         environmentId={environmentId}
       />
 

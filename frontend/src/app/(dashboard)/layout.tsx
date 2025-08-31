@@ -9,6 +9,7 @@ import { APP_CONFIG } from '@/lib/constants';
 import ProtectedRoute from '@/components/common/protected-route';
 import { Logo } from '@/components/ui/logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import OrganizationSwitcher from '@/components/organizations/organization-switcher';
 
 export default function DashboardLayout({
   children,
@@ -36,6 +37,9 @@ export default function DashboardLayout({
                     {APP_CONFIG.name}
                   </span>
                 </Link>
+
+                {/* Organization Switcher */}
+                <OrganizationSwitcher />
 
                 {/* Navigation */}
                 <nav className="hidden md:flex items-center space-x-6">

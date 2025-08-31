@@ -118,3 +118,110 @@ export function useDeleteOrganization() {
     },
   });
 }
+
+// Organization Member Management
+export interface OrganizationMember {
+  id: number;
+  user_id: number;
+  username: string;
+  full_name: string;
+  email: string;
+  role: 'admin' | 'editor' | 'viewer';
+  joined_at: string;
+  is_owner: boolean;
+}
+
+export interface InviteUserData {
+  email: string;
+  role: 'admin' | 'editor' | 'viewer';
+}
+
+export interface UpdateMemberRoleData {
+  role: 'admin' | 'editor' | 'viewer';
+}
+
+export function useOrganizationMembers(organizationId: number) {
+  return useQuery({
+    queryKey: ['organizations', organizationId, 'members'],
+    queryFn: async () => {
+      const response = await api.get<{ results: OrganizationMember[] }>(`${API_CONFIG.endpoints.organizations}${organizationId}/members/`);
+      return response.data;
+    },
+    enabled: !!organizationId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+}
+
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ organizationId, data }: { organizationId: number; data: InviteUserData }) => {
+      const response = await api.post(`${API_CONFIG.endpoints.organizations}${organizationId}/invite/`, data);
+      return response.data;
+    },
+    onSuccess: (data, { organizationId }) => {
+      queryClient.invalidateQueries({ queryKey: ['organizations', organizationId, 'members'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      toast.success(`Invitation sent to ${data.email}!`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.detail || 
+                     error.response?.data?.message ||
+                     Object.values(error.response?.data || {}).flat().join(', ') ||
+                     'Failed to send invitation';
+      toast.error(message);
+    },
+  });
+}
+
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      organizationId, 
+      memberId, 
+      data 
+    }: { 
+      organizationId: number; 
+      memberId: number; 
+      data: UpdateMemberRoleData 
+    }) => {
+      const response = await api.patch(`${API_CONFIG.endpoints.organizations}${organizationId}/members/${memberId}/`, data);
+      return response.data;
+    },
+    onSuccess: (_, { organizationId }) => {
+      queryClient.invalidateQueries({ queryKey: ['organizations', organizationId, 'members'] });
+      toast.success(`Member role updated successfully!`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.detail || 
+                     error.response?.data?.message || 
+                     'Failed to update member role';
+      toast.error(message);
+    },
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ organizationId, memberId }: { organizationId: number; memberId: number }) => {
+      await api.delete(`${API_CONFIG.endpoints.organizations}${organizationId}/members/${memberId}/`);
+      return memberId;
+    },
+    onSuccess: (_, { organizationId }) => {
+      queryClient.invalidateQueries({ queryKey: ['organizations', organizationId, 'members'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      toast.success('Member removed successfully!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.detail || 
+                     error.response?.data?.message || 
+                     'Failed to remove member';
+      toast.error(message);
+    },
+  });
+}

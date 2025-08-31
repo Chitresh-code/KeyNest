@@ -41,6 +41,15 @@ export function useEnvironmentVariables(environmentId: number) {
     },
     enabled: !!environmentId,
     staleTime: 1000 * 60 * 2, // 2 minutes (shorter for sensitive data)
+    retry: (failureCount, error: any) => {
+      // Don't retry on auth errors (401, 403) or not found (404)
+      if ([401, 403, 404].includes(error?.response?.status)) {
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 }
 
@@ -169,9 +178,20 @@ export function useImportEnvironment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ environmentId, file }: { environmentId: number; file: File }) => {
+    mutationFn: async ({ 
+      environmentId, 
+      file, 
+      overwrite = false 
+    }: { 
+      environmentId: number; 
+      file: File; 
+      overwrite?: boolean;
+    }) => {
       const formData = new FormData();
       formData.append('file', file);
+      if (overwrite) {
+        formData.append('overwrite', 'true');
+      }
       
       const response = await api.post(`${API_CONFIG.endpoints.environments}${environmentId}/import/`, formData, {
         headers: {
@@ -184,13 +204,15 @@ export function useImportEnvironment() {
       queryClient.invalidateQueries({ queryKey: ['environments', environmentId, 'variables'] });
       queryClient.invalidateQueries({ queryKey: ['environments'] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success(`Successfully imported ${data.imported_count} variables!`);
+      
+      const message = data.overwritten_count 
+        ? `Successfully imported ${data.imported_count} variables and updated ${data.overwritten_count} existing ones!`
+        : `Successfully imported ${data.imported_count} variables!`;
+      toast.success(message);
     },
     onError: (error: any) => {
-      const message = error.response?.data?.detail || 
-                     error.response?.data?.message || 
-                     'Failed to import environment file';
-      toast.error(message);
+      // Return the error so we can handle conflicts in the component
+      throw error;
     },
   });
 }

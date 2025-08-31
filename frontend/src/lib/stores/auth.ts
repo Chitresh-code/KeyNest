@@ -19,12 +19,12 @@ interface AuthActions {
 
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
-    set => ({
+    (set) => ({
       // Initial state
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true, // Start with true to handle hydration
 
       // Actions
       setUser: user =>
@@ -32,6 +32,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           ...state,
           user,
           isAuthenticated: !!user,
+          isLoading: false,
         })),
 
       setToken: token =>
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           ...state,
           token,
           isAuthenticated: !!token,
+          isLoading: false,
         })),
 
       setAuth: authResponse =>
@@ -47,6 +49,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           user: authResponse.user,
           token: authResponse.token,
           isAuthenticated: true,
+          isLoading: false,
         })),
 
       logout: () => {
@@ -76,6 +79,12 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Set loading to false after hydration
+        if (state) {
+          state.isLoading = false;
+        }
+      },
     }
   )
 );

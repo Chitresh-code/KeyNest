@@ -40,7 +40,7 @@ DEBUG = env('DEBUG', default=True)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
 # Encryption key for sensitive data
-ENCRYPTION_KEY = env('ENCRYPTION_KEY', default=Fernet.generate_key().decode())
+ENCRYPTION_KEY = env('ENCRYPTION_KEY')
 
 
 # Application definition

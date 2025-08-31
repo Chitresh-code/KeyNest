@@ -78,6 +78,15 @@ export function useEnvironment(environmentId: number) {
     },
     enabled: !!environmentId,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on auth errors (401, 403) or not found (404)
+      if ([401, 403, 404].includes(error?.response?.status)) {
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 }
 

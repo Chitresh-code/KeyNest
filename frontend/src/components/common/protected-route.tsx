@@ -22,7 +22,7 @@ export default function ProtectedRoute({
   const { isAuthenticated, token, user, isLoading } = useAuthStore();
 
   useEffect(() => {
-    // Wait for auth state to be determined
+    // Don't redirect during initial loading
     if (isLoading) return;
 
     // Check if we need authentication
