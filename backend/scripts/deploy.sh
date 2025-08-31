@@ -36,7 +36,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Pick compose file
-COMPOSE_FILE="docker-compose.prod.yml"
+COMPOSE_FILE="docker-compose.yml"
 log "Using production configuration"
 
 # === FUNCTIONS ===
