@@ -15,7 +15,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - CACHE_LOCATION=${CACHE_LOCATION:-redis://redis:6379/1}
-      - ALLOWED_HOSTS=envnest.shop,www.envnest.shop
+      - ALLOWED_HOSTS=envnest.shop,www.envnest.shop,localhost,127.0.0.1,0.0.0.0
       - SITE_URL=https://envnest.shop
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-KeyNest.settings}
     volumes:

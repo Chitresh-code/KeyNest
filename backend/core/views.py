@@ -6,7 +6,7 @@ from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics, permissions
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes, action
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.parsers import MultiPartParser, JSONParser
@@ -84,6 +84,450 @@ class OrganizationViewSet(BaseKeyNestViewSet):
             )
             
             logger.info(f"Organization created: {organization.name} by {self.request.user.email}")
+    
+    @action(detail=True, methods=['post'])
+    def invite_member(self, request, pk=None):
+        """
+        Invite a user to join the organization
+        Production-ready with comprehensive validation and security measures
+        """
+        try:
+            organization = self.get_object()
+            
+            # Check if user has admin permission
+            try:
+                membership = OrganizationMembership.objects.get(
+                    user=request.user,
+                    organization=organization
+                )
+                if membership.role != 'admin':
+                    logger.warning(f"Non-admin user {request.user.email} attempted to invite member to org {organization.id}")
+                    raise PermissionDenied("Only admins can invite members")
+            except OrganizationMembership.DoesNotExist:
+                logger.warning(f"Non-member user {request.user.email} attempted to invite member to org {organization.id}")
+                raise PermissionDenied("You are not a member of this organization")
+            
+            # Validate and sanitize input
+            email = request.data.get('email', '').strip().lower()
+            role = request.data.get('role', 'viewer').strip().lower()
+            
+            # Input validation
+            if not email:
+                return Response({
+                    'error': 'Email is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate email format
+            from django.core.validators import validate_email
+            from django.core.exceptions import ValidationError as DjangoValidationError
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                return Response({
+                    'error': 'Invalid email format'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check email length (prevent DoS)
+            if len(email) > 254:  # RFC 5321 limit
+                return Response({
+                    'error': 'Email address too long'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if role not in ['admin', 'editor', 'viewer']:
+                return Response({
+                    'error': 'Invalid role. Must be admin, editor, or viewer'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check organization member limit (prevent abuse)
+            current_member_count = OrganizationMembership.objects.filter(
+                organization=organization
+            ).count()
+            if current_member_count >= 100:  # Configurable limit
+                return Response({
+                    'error': 'Organization has reached the maximum number of members'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Find user by email - use consistent response to prevent email enumeration
+            try:
+                invited_user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                # Log the attempt but don't reveal that user doesn't exist
+                logger.info(f"Invitation attempt for non-existent user {email} by {request.user.email}")
+                return Response({
+                    'error': 'Unable to invite user. Please ensure the email is correct and the user has an account.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if user is already a member
+            if OrganizationMembership.objects.filter(
+                user=invited_user,
+                organization=organization
+            ).exists():
+                return Response({
+                    'error': 'User is already a member of this organization'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Prevent self-invitation edge case
+            if invited_user == request.user:
+                return Response({
+                    'error': 'You cannot invite yourself'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create membership with transaction
+            with transaction.atomic():
+                membership = OrganizationMembership.objects.create(
+                    user=invited_user,
+                    organization=organization,
+                    role=role
+                )
+                
+                # Log invitation with detailed audit trail
+                AuditLog.objects.create(
+                    user=request.user,
+                    action='create',
+                    target_type='membership',
+                    target_id=str(organization.id),
+                    details={
+                        'invited_user_id': invited_user.id,
+                        'invited_user_email': invited_user.email,
+                        'role': role,
+                        'organization_id': organization.id,
+                        'organization_name': organization.name,
+                        'invitation_method': 'admin_invite'
+                    },
+                    ip_address=get_client_ip(request)
+                )
+                
+                logger.info(f"User {invited_user.email} invited to organization {organization.name} as {role} by {request.user.email}")
+            
+            return Response({
+                'message': f'User has been added to {organization.name} as {role}',
+                'member': {
+                    'id': invited_user.id,
+                    'email': invited_user.email,
+                    'username': invited_user.username,
+                    'role': role,
+                    'joined_at': membership.joined_at.isoformat()
+                }
+            }, status=status.HTTP_201_CREATED)
+            
+        except PermissionDenied:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in invite_member: {str(e)}")
+            return Response({
+                'error': 'An error occurred while processing the invitation'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['get'])
+    def members(self, request, pk=None):
+        """
+        Get organization members
+        Production-ready with proper authorization and data filtering
+        """
+        try:
+            organization = self.get_object()
+            
+            # Check if user has access to this organization
+            try:
+                user_membership = OrganizationMembership.objects.get(
+                    user=request.user,
+                    organization=organization
+                )
+            except OrganizationMembership.DoesNotExist:
+                logger.warning(f"Non-member user {request.user.email} attempted to access members of org {organization.id}")
+                raise PermissionDenied("You are not a member of this organization")
+            
+            # Get all memberships with optimized query
+            memberships = OrganizationMembership.objects.filter(
+                organization=organization
+            ).select_related('user').order_by('joined_at')
+            
+            # Filter sensitive data based on user role
+            members_data = []
+            for membership in memberships:
+                member_data = {
+                    'id': membership.user.id,
+                    'email': membership.user.email,
+                    'username': membership.user.username,
+                    'role': membership.role,
+                    'joined_at': membership.joined_at.isoformat()
+                }
+                
+                # Add additional fields for admins only
+                if user_membership.role == 'admin':
+                    member_data.update({
+                        'last_login': membership.user.last_login.isoformat() if membership.user.last_login else None,
+                        'is_active': membership.user.is_active
+                    })
+                
+                members_data.append(member_data)
+            
+            # Log member list access for audit
+            AuditLog.objects.create(
+                user=request.user,
+                action='view',
+                target_type='membership',
+                target_id=str(organization.id),
+                details={
+                    'organization_name': organization.name,
+                    'member_count': len(members_data)
+                },
+                ip_address=get_client_ip(request)
+            )
+            
+            return Response({
+                'members': members_data,
+                'total_count': len(members_data)
+            })
+            
+        except PermissionDenied:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in members endpoint: {str(e)}")
+            return Response({
+                'error': 'An error occurred while retrieving members'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['patch'])
+    def update_member_role(self, request, pk=None):
+        """
+        Update a member's role in the organization
+        Production-ready with comprehensive validation and security checks
+        """
+        try:
+            organization = self.get_object()
+            
+            # Check if user has admin permission
+            try:
+                admin_membership = OrganizationMembership.objects.get(
+                    user=request.user,
+                    organization=organization
+                )
+                if admin_membership.role != 'admin':
+                    logger.warning(f"Non-admin user {request.user.email} attempted to update member role in org {organization.id}")
+                    raise PermissionDenied("Only admins can update member roles")
+            except OrganizationMembership.DoesNotExist:
+                logger.warning(f"Non-member user {request.user.email} attempted to update member role in org {organization.id}")
+                raise PermissionDenied("You are not a member of this organization")
+            
+            # Validate and sanitize input
+            user_id = request.data.get('user_id')
+            new_role = request.data.get('role', '').strip().lower()
+            
+            # Input validation
+            if not user_id:
+                return Response({
+                    'error': 'user_id is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not new_role:
+                return Response({
+                    'error': 'role is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if new_role not in ['admin', 'editor', 'viewer']:
+                return Response({
+                    'error': 'Invalid role. Must be admin, editor, or viewer'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate user_id is an integer
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                return Response({
+                    'error': 'Invalid user_id format'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get the member to be updated
+            try:
+                member_membership = OrganizationMembership.objects.select_related('user').get(
+                    user_id=user_id,
+                    organization=organization
+                )
+            except OrganizationMembership.DoesNotExist:
+                return Response({
+                    'error': 'User is not a member of this organization'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Prevent self-role modification to avoid lockout
+            if member_membership.user == request.user:
+                return Response({
+                    'error': 'You cannot change your own role'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if trying to change the last admin
+            if member_membership.role == 'admin' and new_role != 'admin':
+                admin_count = OrganizationMembership.objects.filter(
+                    organization=organization,
+                    role='admin'
+                ).count()
+                if admin_count <= 1:
+                    return Response({
+                        'error': 'Cannot change role of the last admin in the organization'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Update role with transaction
+            old_role = member_membership.role
+            if old_role == new_role:
+                return Response({
+                    'message': 'Role is already set to the specified value',
+                    'member': {
+                        'id': member_membership.user.id,
+                        'email': member_membership.user.email,
+                        'username': member_membership.user.username,
+                        'role': new_role
+                    }
+                })
+            
+            with transaction.atomic():
+                member_membership.role = new_role
+                member_membership.save()
+                
+                # Log role update with comprehensive details
+                AuditLog.objects.create(
+                    user=request.user,
+                    action='update',
+                    target_type='membership',
+                    target_id=str(organization.id),
+                    details={
+                        'updated_user_id': member_membership.user.id,
+                        'updated_user_email': member_membership.user.email,
+                        'old_role': old_role,
+                        'new_role': new_role,
+                        'organization_id': organization.id,
+                        'organization_name': organization.name
+                    },
+                    ip_address=get_client_ip(request)
+                )
+                
+                logger.info(f"Role updated for {member_membership.user.email} in org {organization.name}: {old_role} -> {new_role} by {request.user.email}")
+            
+            return Response({
+                'message': f'Role updated successfully',
+                'member': {
+                    'id': member_membership.user.id,
+                    'email': member_membership.user.email,
+                    'username': member_membership.user.username,
+                    'role': new_role
+                }
+            })
+            
+        except PermissionDenied:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in update_member_role: {str(e)}")
+            return Response({
+                'error': 'An error occurred while updating the member role'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['delete'])
+    def remove_member(self, request, pk=None):
+        """
+        Remove a member from the organization
+        Production-ready with comprehensive validation and security checks
+        """
+        try:
+            organization = self.get_object()
+            
+            # Check if user has admin permission
+            try:
+                admin_membership = OrganizationMembership.objects.get(
+                    user=request.user,
+                    organization=organization
+                )
+                if admin_membership.role != 'admin':
+                    logger.warning(f"Non-admin user {request.user.email} attempted to remove member from org {organization.id}")
+                    raise PermissionDenied("Only admins can remove members")
+            except OrganizationMembership.DoesNotExist:
+                logger.warning(f"Non-member user {request.user.email} attempted to remove member from org {organization.id}")
+                raise PermissionDenied("You are not a member of this organization")
+            
+            # Validate and sanitize input
+            user_id = request.data.get('user_id')
+            
+            if not user_id:
+                return Response({
+                    'error': 'user_id is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate user_id is an integer
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                return Response({
+                    'error': 'Invalid user_id format'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get the member to be removed
+            try:
+                member_membership = OrganizationMembership.objects.select_related('user').get(
+                    user_id=user_id,
+                    organization=organization
+                )
+            except OrganizationMembership.DoesNotExist:
+                return Response({
+                    'error': 'User is not a member of this organization'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Prevent self-removal to avoid lockout
+            if member_membership.user == request.user:
+                return Response({
+                    'error': 'You cannot remove yourself from the organization'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Prevent removing the last admin
+            if member_membership.role == 'admin':
+                admin_count = OrganizationMembership.objects.filter(
+                    organization=organization,
+                    role='admin'
+                ).count()
+                if admin_count <= 1:
+                    return Response({
+                        'error': 'Cannot remove the last admin from the organization'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Remove membership with transaction
+            member_email = member_membership.user.email
+            member_username = member_membership.user.username
+            member_role = member_membership.role
+            
+            with transaction.atomic():
+                member_membership.delete()
+                
+                # Log removal with comprehensive details
+                AuditLog.objects.create(
+                    user=request.user,
+                    action='delete',
+                    target_type='membership',
+                    target_id=str(organization.id),
+                    details={
+                        'removed_user_id': user_id,
+                        'removed_user_email': member_email,
+                        'removed_user_role': member_role,
+                        'organization_id': organization.id,
+                        'organization_name': organization.name
+                    },
+                    ip_address=get_client_ip(request)
+                )
+                
+                logger.info(f"User {member_email} removed from organization {organization.name} by {request.user.email}")
+            
+            return Response({
+                'message': f'User has been removed from {organization.name}',
+                'removed_member': {
+                    'email': member_email,
+                    'username': member_username,
+                    'role': member_role
+                }
+            })
+            
+        except PermissionDenied:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in remove_member: {str(e)}")
+            return Response({
+                'error': 'An error occurred while removing the member'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ProjectViewSet(BaseKeyNestViewSet):
@@ -94,14 +538,29 @@ class ProjectViewSet(BaseKeyNestViewSet):
     permission_classes = [IsAuthenticated, HasProjectPermission]
     
     def get_queryset(self):
-        """Return projects from user's organizations"""
+        """Return projects from user's organizations, optionally filtered by organization"""
         user_orgs = Organization.objects.filter(
             organizationmembership__user=self.request.user
         ).values_list('id', flat=True)
         
-        return Project.objects.filter(
+        queryset = Project.objects.filter(
             organization_id__in=user_orgs
         ).select_related('organization', 'created_by').prefetch_related('environments')
+        
+        # Filter by organization if specified
+        org_id = self.request.query_params.get('organization')
+        if org_id:
+            try:
+                org_id = int(org_id)
+                if org_id in user_orgs:
+                    queryset = queryset.filter(organization_id=org_id)
+                else:
+                    # User doesn't have access to this organization
+                    return Project.objects.none()
+            except (ValueError, TypeError):
+                pass
+        
+        return queryset
     
     def perform_create(self, serializer):
         """Create project with audit logging"""
