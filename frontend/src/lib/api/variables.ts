@@ -148,6 +148,7 @@ export function useExportEnvironment() {
     mutationFn: async (environmentId: number) => {
       const response = await api.get(`${API_CONFIG.endpoints.environments}${environmentId}/export/`, {
         responseType: 'blob',
+        timeout: 90000, // 1.5 minutes for exports
       });
       
       // Create download link
@@ -197,6 +198,7 @@ export function useImportEnvironment() {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 120000, // 2 minutes for file uploads
       });
       return response.data;
     },

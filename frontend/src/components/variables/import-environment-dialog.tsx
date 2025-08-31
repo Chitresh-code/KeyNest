@@ -264,7 +264,7 @@ export default function ImportEnvironmentDialog({
               
               <Button
                 onClick={handleImport}
-                disabled={!selectedFile || importMutation.isPending || (conflicts && !overwriteConfirmed && conflicts.conflicts.length > 0)}
+                disabled={Boolean(!selectedFile || importMutation.isPending || (conflicts && !overwriteConfirmed && conflicts.conflicts && conflicts.conflicts.length > 0))}
                 className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
               >
                 {importMutation.isPending ? 'Importing...' : conflicts ? 'Import with Conflicts' : 'Import Variables'}

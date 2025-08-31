@@ -94,7 +94,7 @@ export default function OrganizationSettingsDialog({
   const updateRoleMutation = useUpdateMemberRole();
   const removeMemberMutation = useRemoveMember();
 
-  const members = membersData?.results || [];
+  const members = membersData?.members || [];
   const currentUserRole = organization?.user_role;
   const canManageMembers = currentUserRole === 'admin';
   const canEditOrg = currentUserRole === 'admin';
@@ -146,8 +146,8 @@ export default function OrganizationSettingsDialog({
     try {
       await updateRoleMutation.mutateAsync({
         organizationId,
-        memberId,
-        data: { role: newRole }
+        userId: memberId,
+        role: newRole
       });
     } catch (error) {
       // Error handled by mutation
@@ -160,7 +160,7 @@ export default function OrganizationSettingsDialog({
     try {
       await removeMemberMutation.mutateAsync({
         organizationId,
-        memberId: removeMember.id
+        userId: removeMember.id
       });
       setRemoveMember(null);
     } catch (error) {
@@ -309,7 +309,7 @@ export default function OrganizationSettingsDialog({
                         className="flex-1"
                         onKeyDown={(e) => e.key === 'Enter' && handleInviteUser()}
                       />
-                      <Select value={inviteRole} onValueChange={setInviteRole}>
+                      <Select value={inviteRole} onValueChange={(value: 'admin' | 'editor' | 'viewer') => setInviteRole(value)}>
                         <SelectTrigger className="w-32">
                           <SelectValue />
                         </SelectTrigger>
@@ -356,10 +356,12 @@ export default function OrganizationSettingsDialog({
                               <div>
                                 <div className="flex items-center space-x-2">
                                   <p className="font-medium text-gray-900 dark:text-foreground">
-                                    {member.full_name || member.username}
+                                    {member.username}
                                   </p>
-                                  {member.is_owner && (
-                                    <Crown className="h-4 w-4 text-yellow-500" title="Organization Owner" />
+                                  {member.role === 'admin' && (
+                                    <div title="Admin">
+                                      <Crown className="h-4 w-4 text-yellow-500" />
+                                    </div>
                                   )}
                                 </div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -379,7 +381,7 @@ export default function OrganizationSettingsDialog({
                             </TableCell>
                             {canManageMembers && (
                               <TableCell>
-                                {!member.is_owner && (
+                                {canManageMembers && (
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm">
@@ -438,10 +440,9 @@ export default function OrganizationSettingsDialog({
           open={!!removeMember}
           onOpenChange={() => setRemoveMember(null)}
           title="Remove Member"
-          description={`Are you sure you want to remove ${removeMember.full_name || removeMember.username} from this organization? They will lose access to all projects and data.`}
+          description={`Are you sure you want to remove ${removeMember.username} from this organization? They will lose access to all projects and data.`}
           onConfirm={handleRemoveMember}
           isLoading={removeMemberMutation.isPending}
-          confirmText="Remove Member"
         />
       )}
     </>

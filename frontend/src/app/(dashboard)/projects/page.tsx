@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useProjects, useDeleteProject } from '@/lib/api/projects';
 import { useOrganizations } from '@/lib/api/organizations';
+import { useOrganizationStore } from '@/lib/stores/organization';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import CreateProjectDialog from '@/components/projects/create-project-dialog';
@@ -26,7 +27,10 @@ export default function ProjectsPage() {
   const [editProject, setEditProject] = useState<any>(null);
   const [deleteProject, setDeleteProject] = useState<any>(null);
 
-  const { data: projectsData, isLoading: projectsLoading } = useProjects();
+  const { currentOrganization } = useOrganizationStore();
+  const { data: projectsData, isLoading: projectsLoading } = useProjects({
+    organization: currentOrganization?.id
+  });
   const { data: organizationsData } = useOrganizations();
   const deleteProjectMutation = useDeleteProject();
 
@@ -67,7 +71,10 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">Projects</h1>
           <p className="text-gray-600 dark:text-muted-foreground">
-            Manage your projects and their environments
+            {currentOrganization 
+              ? `Manage projects in ${currentOrganization.name}`
+              : 'Manage your projects and their environments'
+            }
           </p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} className="shrink-0">

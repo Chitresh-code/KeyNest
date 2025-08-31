@@ -4,7 +4,7 @@ import { API_CONFIG, ROUTES } from '../constants';
 // Create axios instance with default config
 export const apiClient = axios.create({
   baseURL: API_CONFIG.baseUrl,
-  timeout: 10000,
+  timeout: 60000, // Increased to 60 seconds for slow API responses
   headers: {
     'Content-Type': 'application/json',
   },
