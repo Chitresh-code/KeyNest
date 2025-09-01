@@ -222,10 +222,15 @@ class AuditLog(models.Model):
         ('view', 'View'),
         ('export', 'Export'),
         ('import', 'Import'),
+        ('activate', 'Activate'),
+        ('password_reset_request', 'Password Reset Request'),
+        ('password_reset_confirm', 'Password Reset Confirm'),
+        ('login', 'Login'),
+        ('logout', 'Logout'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
     target_type = models.CharField(max_length=50)  # 'project', 'environment', 'variable'
     target_id = models.CharField(max_length=100)
     details = models.JSONField(blank=True, null=True)

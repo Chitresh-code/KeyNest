@@ -26,9 +26,37 @@ from .serializers import (
 from .permissions import HasOrganizationPermission, HasProjectPermission, HasEnvironmentPermission
 from .utils import parse_env_file, validate_env_data, get_client_ip
 from authentication.tasks import send_organization_invitation, send_project_notification
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+
+def send_direct_email(subject, message, recipient_email, from_email=None):
+    """
+    Send email directly via SMTP (bypasses Celery for reliable delivery).
+    """
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        
+        msg = MIMEText(message, 'plain', 'utf-8')
+        msg['Subject'] = subject
+        msg['From'] = from_email or settings.DEFAULT_FROM_EMAIL
+        msg['To'] = recipient_email
+        
+        server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        server.starttls()
+        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        
+        logger.info(f"Direct email sent successfully to {recipient_email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send direct email to {recipient_email}: {str(e)}")
+        return False
 
 
 class BaseKeyNestViewSet(viewsets.ModelViewSet):
@@ -207,12 +235,34 @@ class OrganizationViewSet(BaseKeyNestViewSet):
                     expires_at=expires_at
                 )
                 
-                # Send invitation email
-                send_organization_invitation.delay(
-                    inviter_id=request.user.id,
-                    invitee_email=email,
-                    organization_name=organization.name,
-                    invitation_token=invitation_token
+                # Send invitation email directly
+                invitation_url = f"http://localhost:3000/accept-invitation/{invitation_token}"
+                email_subject = f"Invitation to join {organization.name} on KeyNest"
+                email_message = f"""Hello,
+
+You have been invited by {request.user.get_full_name() or request.user.username} to join the organization "{organization.name}" on KeyNest.
+
+To accept this invitation and join the organization, please click the link below:
+
+{invitation_url}
+
+Important: This invitation will expire in 7 days. If you don't accept the invitation within this time, you'll need to request a new one.
+
+If you don't have a KeyNest account, you'll be able to create one when you accept this invitation.
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+If you need help, please contact our support team.
+
+© KeyNest Team"""
+                
+                send_direct_email(
+                    subject=email_subject,
+                    message=email_message,
+                    recipient_email=email
                 )
                 
                 # Log invitation with detailed audit trail
@@ -419,11 +469,25 @@ class OrganizationViewSet(BaseKeyNestViewSet):
                 member_membership.save()
                 
                 # Send notification to the user whose role was changed
-                send_project_notification.delay(
-                    user_id=member_membership.user.id,
-                    project_name=organization.name,
-                    notification_type='member_updated',
-                    message=f'Your role in "{organization.name}" has been updated from {old_role} to {new_role} by {request.user.username}.'
+                email_subject = f"Role updated in {organization.name}"
+                email_message = f"""Hello {member_membership.user.get_full_name() or member_membership.user.username},
+
+Your role in the organization "{organization.name}" has been updated from {old_role} to {new_role} by {request.user.get_full_name() or request.user.username}.
+
+You can now access KeyNest to see your updated permissions.
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+
+© KeyNest Team"""
+                
+                send_direct_email(
+                    subject=email_subject,
+                    message=email_message,
+                    recipient_email=member_membership.user.email
                 )
                 
                 # Log role update with comprehensive details
@@ -536,11 +600,28 @@ class OrganizationViewSet(BaseKeyNestViewSet):
             
             with transaction.atomic():
                 # Send notification to the removed user
-                send_project_notification.delay(
-                    user_id=user_id,
-                    project_name=organization.name,
-                    notification_type='member_removed',
-                    message=f'You have been removed from "{organization.name}" by {request.user.username}.'
+                removed_user = User.objects.get(id=user_id)
+                email_subject = f"Removed from {organization.name}"
+                email_message = f"""Hello {removed_user.get_full_name() or removed_user.username},
+
+You have been removed from the organization "{organization.name}" by {request.user.get_full_name() or request.user.username}.
+
+You no longer have access to this organization's projects and environments.
+
+If you believe this was done in error, please contact the organization administrator.
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+
+© KeyNest Team"""
+                
+                send_direct_email(
+                    subject=email_subject,
+                    message=email_message,
+                    recipient_email=removed_user.email
                 )
                 
                 member_membership.delete()
@@ -637,11 +718,25 @@ class ProjectViewSet(BaseKeyNestViewSet):
             ).exclude(user=self.request.user).select_related('user')
             
             for membership in organization_members:
-                send_project_notification.delay(
-                    user_id=membership.user.id,
-                    project_name=project.name,
-                    notification_type='created',
-                    message=f'New project "{project.name}" has been created by {self.request.user.username} in {project.organization.name}.'
+                email_subject = f"New project created: {project.name}"
+                email_message = f"""Hello {membership.user.get_full_name() or membership.user.username},
+
+A new project "{project.name}" has been created by {self.request.user.get_full_name() or self.request.user.username} in the organization "{project.organization.name}".
+
+You can now access this project in KeyNest and start managing its environments.
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+
+© KeyNest Team"""
+                
+                send_direct_email(
+                    subject=email_subject,
+                    message=email_message,
+                    recipient_email=membership.user.email
                 )
             
             logger.info(f"Project created: {project.name} by {self.request.user.email}")
@@ -659,11 +754,25 @@ class ProjectViewSet(BaseKeyNestViewSet):
                 ).exclude(user=self.request.user).select_related('user')
                 
                 for membership in organization_members:
-                    send_project_notification.delay(
-                        user_id=membership.user.id,
-                        project_name=project.name,
-                        notification_type='updated',
-                        message=f'Project "{old_name}" has been renamed to "{project.name}" by {self.request.user.username}.'
+                    email_subject = f"Project renamed: {old_name} → {project.name}"
+                    email_message = f"""Hello {membership.user.get_full_name() or membership.user.username},
+
+The project "{old_name}" has been renamed to "{project.name}" by {self.request.user.get_full_name() or self.request.user.username} in the organization "{project.organization.name}".
+
+All environments and variables remain unchanged - only the project name has been updated.
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+
+© KeyNest Team"""
+                    
+                    send_direct_email(
+                        subject=email_subject,
+                        message=email_message,
+                        recipient_email=membership.user.email
                     )
             
             logger.info(f"Project updated: {project.name} by {self.request.user.email}")
@@ -680,11 +789,25 @@ class ProjectViewSet(BaseKeyNestViewSet):
             ).exclude(user=self.request.user).select_related('user')
             
             for membership in organization_members:
-                send_project_notification.delay(
-                    user_id=membership.user.id,
-                    project_name=project_name,
-                    notification_type='deleted',
-                    message=f'Project "{project_name}" has been deleted by {self.request.user.username}.'
+                email_subject = f"Project deleted: {project_name}"
+                email_message = f"""Hello {membership.user.get_full_name() or membership.user.username},
+
+The project "{project_name}" has been deleted by {self.request.user.get_full_name() or self.request.user.username} from the organization "{organization.name}".
+
+All environments and variables associated with this project have been permanently removed.
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+
+© KeyNest Team"""
+                
+                send_direct_email(
+                    subject=email_subject,
+                    message=email_message,
+                    recipient_email=membership.user.email
                 )
             
             super().perform_destroy(instance)

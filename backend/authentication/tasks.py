@@ -20,17 +20,25 @@ User = get_user_model()
 def send_email_task(self, subject: str, message: str, from_email: str, 
                     recipient_list: List[str], html_message: str = None):
     """
-    Generic email sending task with retry logic.
+    Generic email sending task using direct SMTP (works better than Django's send_mail).
     """
     try:
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=from_email or settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipient_list,
-            html_message=html_message,
-            fail_silently=False,
-        )
+        import smtplib
+        from email.mime.text import MIMEText
+        
+        # Create message
+        msg = MIMEText(message, 'plain', 'utf-8')
+        msg['Subject'] = subject
+        msg['From'] = from_email or settings.DEFAULT_FROM_EMAIL
+        msg['To'] = ', '.join(recipient_list)
+        
+        # Send via direct SMTP (same method that worked in testing)
+        server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        server.starttls()
+        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        server.send_message(msg, from_addr=from_email or settings.DEFAULT_FROM_EMAIL, to_addrs=recipient_list)
+        server.quit()
+        
         logger.info(f"Email sent successfully to {recipient_list}")
         return f"Email sent to {len(recipient_list)} recipients"
         
@@ -100,7 +108,13 @@ def send_activation_email(user_id: int, activation_token: str, activation_uid: s
         user = User.objects.get(id=user_id)
         
         context = {
-            'user': user,
+            'user': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.get_full_name() or user.username,
+                'username': user.username,
+                'email': user.email,
+            },
             'site_name': settings.SITE_NAME,
             'site_url': settings.FRONTEND_URL,
             'activation_url': f"{settings.FRONTEND_URL}/{settings.ACTIVATION_URL.format(uid=activation_uid, token=activation_token)}",
@@ -108,11 +122,14 @@ def send_activation_email(user_id: int, activation_token: str, activation_uid: s
             'uid': activation_uid,
         }
         
-        return send_html_email_task.delay(
+        # Create simple text email from template
+        html_content = render_to_string('authentication/activation_email.html', context)
+        
+        return send_email_task.delay(
             subject=f"Activate Your {settings.SITE_NAME} Account",
-            template_name='authentication/activation_email.html',
-            context=context,
-            recipient_email=user.email,
+            message=html_content,  # Use rendered template as plain text
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
         )
         
     except User.DoesNotExist:
@@ -132,7 +149,13 @@ def send_password_reset_email(user_id: int, reset_token: str, reset_uid: str):
         user = User.objects.get(id=user_id)
         
         context = {
-            'user': user,
+            'user': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.get_full_name() or user.username,
+                'username': user.username,
+                'email': user.email,
+            },
             'site_name': settings.SITE_NAME,
             'site_url': settings.FRONTEND_URL,
             'reset_url': f"{settings.FRONTEND_URL}/{settings.PASSWORD_RESET_URL.format(uid=reset_uid, token=reset_token)}",
@@ -165,7 +188,13 @@ def send_organization_invitation(inviter_id: int, invitee_email: str,
         inviter = User.objects.get(id=inviter_id)
         
         context = {
-            'inviter': inviter,
+            'inviter': {
+                'first_name': inviter.first_name,
+                'last_name': inviter.last_name,
+                'full_name': inviter.get_full_name() or inviter.username,
+                'username': inviter.username,
+                'email': inviter.email,
+            },
             'invitee_email': invitee_email,
             'organization_name': organization_name,
             'site_name': settings.SITE_NAME,
@@ -199,7 +228,13 @@ def send_project_notification(user_id: int, project_name: str,
         user = User.objects.get(id=user_id)
         
         context = {
-            'user': user,
+            'user': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.get_full_name() or user.username,
+                'username': user.username,
+                'email': user.email,
+            },
             'project_name': project_name,
             'notification_type': notification_type,
             'message': message,
@@ -239,7 +274,13 @@ def send_welcome_email(user_id: int):
         user = User.objects.get(id=user_id)
         
         context = {
-            'user': user,
+            'user': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.get_full_name() or user.username,
+                'username': user.username,
+                'email': user.email,
+            },
             'site_name': settings.SITE_NAME,
             'site_url': settings.FRONTEND_URL,
             'dashboard_url': f"{settings.FRONTEND_URL}/dashboard",

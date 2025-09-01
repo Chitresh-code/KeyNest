@@ -10,6 +10,7 @@ import ProtectedRoute from '@/components/common/protected-route';
 import { Logo } from '@/components/ui/logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import OrganizationSwitcher from '@/components/organizations/organization-switcher';
+import NotificationCenter from '@/components/common/notification-center';
 
 export default function DashboardLayout({
   children,
@@ -65,6 +66,7 @@ export default function DashboardLayout({
                   <User className="h-4 w-4" />
                   <span>{user?.full_name || user?.username}</span>
                 </div>
+                <NotificationCenter />
                 <ThemeToggle />
                 <Button
                   variant="outline"
