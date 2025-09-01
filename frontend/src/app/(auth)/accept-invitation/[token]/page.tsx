@@ -10,9 +10,9 @@ import { api } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 interface AcceptInvitationPageProps {
-  params: {
+  params: Promise<{
     token: string;
-  };
+  }>;
 }
 
 type InvitationState = 'loading' | 'success' | 'error' | 'invalid' | 'expired';
@@ -27,13 +27,24 @@ export default function AcceptInvitationPage({ params }: AcceptInvitationPagePro
   const [state, setState] = useState<InvitationState>('loading');
   const [error, setError] = useState<string>('');
   const [invitationInfo, setInvitationInfo] = useState<InvitationInfo | null>(null);
+  const [token, setToken] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setToken(resolvedParams.token);
+    };
+    getParams();
+  }, [params]);
+
+  useEffect(() => {
     const acceptInvitation = async () => {
+      if (!token) return;
+      
       try {
         const response = await api.post('/auth/invitations/accept/', {
-          token: params.token,
+          token: token,
         });
         
         setState('success');
@@ -71,13 +82,10 @@ export default function AcceptInvitationPage({ params }: AcceptInvitationPagePro
       }
     };
 
-    if (params.token) {
+    if (token) {
       acceptInvitation();
-    } else {
-      setState('invalid');
-      setError('Invalid invitation link.');
     }
-  }, [params.token, router]);
+  }, [token, router]);
 
   if (state === 'loading') {
     return (

@@ -10,10 +10,10 @@ import { api } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 interface ActivatePageProps {
-  params: {
+  params: Promise<{
     uid: string;
     token: string;
-  };
+  }>;
 }
 
 type ActivationState = 'loading' | 'success' | 'error' | 'invalid';
@@ -21,14 +21,27 @@ type ActivationState = 'loading' | 'success' | 'error' | 'invalid';
 export default function ActivatePage({ params }: ActivatePageProps) {
   const [state, setState] = useState<ActivationState>('loading');
   const [error, setError] = useState<string>('');
+  const [uid, setUid] = useState<string>('');
+  const [token, setToken] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setUid(resolvedParams.uid);
+      setToken(resolvedParams.token);
+    };
+    getParams();
+  }, [params]);
+
+  useEffect(() => {
     const activateAccount = async () => {
+      if (!uid || !token) return;
+      
       try {
-        const response = await api.post('/auth/activate/', {
-          uid: params.uid,
-          token: params.token,
+        await api.post('/auth/activate/', {
+          uid: uid,
+          token: token,
         });
         
         setState('success');
@@ -53,13 +66,10 @@ export default function ActivatePage({ params }: ActivatePageProps) {
       }
     };
 
-    if (params.uid && params.token) {
+    if (uid && token) {
       activateAccount();
-    } else {
-      setState('invalid');
-      setError('Invalid activation link.');
     }
-  }, [params.uid, params.token, router]);
+  }, [uid, token, router]);
 
   if (state === 'loading') {
     return (

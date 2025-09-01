@@ -36,7 +36,7 @@ export function useEnvironmentVariables(environmentId: number) {
   return useQuery({
     queryKey: ['environments', environmentId, 'variables'],
     queryFn: async () => {
-      const response = await api.get<VariablesResponse>(`${API_CONFIG.endpoints.environments}${environmentId}/variables/`);
+      const response = await api.get<VariablesResponse>(`${API_CONFIG.endpoints.core.environments}${environmentId}/variables/`);
       return response.data;
     },
     enabled: !!environmentId,
@@ -146,7 +146,7 @@ export function useDeleteVariable() {
 export function useExportEnvironment() {
   return useMutation({
     mutationFn: async (environmentId: number) => {
-      const response = await api.get(`${API_CONFIG.endpoints.environments}${environmentId}/export/`, {
+      const response = await api.get(`${API_CONFIG.endpoints.core.environments}${environmentId}/export/`, {
         responseType: 'blob',
         timeout: 90000, // 1.5 minutes for exports
       });
@@ -194,7 +194,7 @@ export function useImportEnvironment() {
         formData.append('overwrite', 'true');
       }
       
-      const response = await api.post(`${API_CONFIG.endpoints.environments}${environmentId}/import/`, formData, {
+      const response = await api.post(`${API_CONFIG.endpoints.core.environments}${environmentId}/import/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

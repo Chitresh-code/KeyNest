@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -34,10 +34,10 @@ const resetPasswordSchema = z
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 interface ResetPasswordPageProps {
-  params: {
+  params: Promise<{
     uid: string;
     token: string;
-  };
+  }>;
 }
 
 export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
@@ -46,7 +46,18 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uid, setUid] = useState<string>('');
+  const [token, setToken] = useState<string>('');
   const router = useRouter();
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setUid(resolvedParams.uid);
+      setToken(resolvedParams.token);
+    };
+    getParams();
+  }, [params]);
 
   const {
     register,
@@ -62,8 +73,8 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
     
     try {
       await api.post('/auth/password-reset-confirm/', {
-        uid: params.uid,
-        token: params.token,
+        uid: uid,
+        token: token,
         new_password: data.new_password,
         confirm_password: data.confirm_password,
       });

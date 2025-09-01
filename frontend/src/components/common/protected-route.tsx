@@ -19,7 +19,7 @@ export default function ProtectedRoute({
   requireAuth = true,
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, token, user, isLoading } = useAuthStore();
+  const { isAuthenticated, user, isLoading } = useAuthStore();
 
   useEffect(() => {
     // Don't redirect during initial loading
@@ -28,19 +28,19 @@ export default function ProtectedRoute({
     // Check if we need authentication
     if (requireAuth) {
       // If not authenticated or missing critical auth data, redirect to login
-      if (!isAuthenticated || !token || !user) {
+      if (!isAuthenticated || !user) {
         router.push(redirectTo);
         return;
       }
     } else {
       // If route should NOT be authenticated (like login/register pages)
       // and user IS authenticated, redirect to dashboard
-      if (isAuthenticated && token && user) {
+      if (isAuthenticated && user) {
         router.push(ROUTES.dashboard);
         return;
       }
     }
-  }, [isAuthenticated, token, user, isLoading, requireAuth, redirectTo, router]);
+  }, [isAuthenticated, user, isLoading, requireAuth, redirectTo, router]);
 
   // Show loading spinner while auth state is being determined
   if (isLoading) {
@@ -59,12 +59,12 @@ export default function ProtectedRoute({
 
   // For auth-required routes: show content only if authenticated
   if (requireAuth) {
-    if (!isAuthenticated || !token || !user) {
+    if (!isAuthenticated || !user) {
       return null; // Will redirect via useEffect
     }
   } else {
     // For non-auth routes (login/register): show content only if NOT authenticated
-    if (isAuthenticated && token && user) {
+    if (isAuthenticated && user) {
       return null; // Will redirect via useEffect
     }
   }

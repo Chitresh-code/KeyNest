@@ -61,7 +61,7 @@ export function useProjectEnvironments(projectId: number) {
   return useQuery({
     queryKey: ['projects', projectId, 'environments'],
     queryFn: async () => {
-      const response = await api.get<EnvironmentsResponse>(`${API_CONFIG.endpoints.projects}${projectId}/environments/`);
+      const response = await api.get<EnvironmentsResponse>(`${API_CONFIG.endpoints.core.projects}${projectId}/environments/`);
       return response.data;
     },
     enabled: !!projectId,
