@@ -1,0 +1,171 @@
+{% extends "authentication/base_email.html" %}
+
+{% block title %}KeyNest - Project Notification{% endblock %}
+
+{% block content %}
+<div class="greeting">
+    Hello {{ user.first_name|default:user.username }}! 📢
+</div>
+
+<div class="message">
+    <p>We have an important update about one of your projects on KeyNest.</p>
+</div>
+
+{% if notification_type == "member_added" %}
+<div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">👋 New Team Member</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} has been added to <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>Your project team is growing! {{ actor_name }} now has access to collaborate on <strong>{{ project_name }}</strong>.</p>
+    
+    <p>They can now:</p>
+    <ul style="color: #4a5568; line-height: 1.8;">
+        <li>View and manage environment variables</li>
+        <li>Create and modify environments</li>
+        <li>Export and import configurations</li>
+        <li>Collaborate with other team members</li>
+    </ul>
+</div>
+
+{% elif notification_type == "member_removed" %}
+<div style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">👋 Team Member Removed</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} has been removed from <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>{{ actor_name }} no longer has access to <strong>{{ project_name }}</strong>.</p>
+    <p>This change was made for security and access management purposes.</p>
+</div>
+
+{% elif notification_type == "environment_created" %}
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">🆕 New Environment Created</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} created <strong>{{ environment_name }}</strong> in <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>A new environment has been set up for your project! The <strong>{{ environment_name }}</strong> environment is now available for managing variables and configurations.</p>
+    
+    <p>Environment type: <strong>{{ environment_type|title }}</strong></p>
+    {% if environment_description %}
+    <p>Description: {{ environment_description }}</p>
+    {% endif %}
+</div>
+
+{% elif notification_type == "project_created" %}
+<div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">🆕 New Project Created</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} created <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>A new project has been set up in your organization! <strong>{{ project_name }}</strong> is now available for managing environment variables and configurations.</p>
+    
+    <p>You can now:</p>
+    <ul style="color: #4a5568; line-height: 1.8;">
+        <li>Access the new project from your dashboard</li>
+        <li>Create environments (dev, staging, prod)</li>
+        <li>Add and manage environment variables</li>
+        <li>Collaborate with other team members</li>
+    </ul>
+</div>
+
+{% elif notification_type == "project_renamed" %}
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">🔄 Project Renamed</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} renamed <strong>{{ old_project_name }}</strong> to <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>The project "<strong>{{ old_project_name }}</strong>" has been renamed to "<strong>{{ project_name }}</strong>".</p>
+    
+    <p>Important: All environments and variables remain unchanged - only the project name has been updated. Your bookmarks and links will automatically redirect to the new project name.</p>
+</div>
+
+{% elif notification_type == "project_deleted" %}
+<div style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">🗑️ Project Deleted</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} deleted <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>The project "<strong>{{ project_name }}</strong>" has been permanently deleted from your organization.</p>
+    
+    <p><strong>⚠️ Important:</strong> All environments and variables associated with this project have been permanently removed and cannot be recovered.</p>
+</div>
+
+{% elif notification_type == "role_updated" %}
+<div style="background: linear-gradient(135deg, #38b2ac 0%, #319795 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">🔄 Role Updated</h2>
+    <p style="margin: 0; font-size: 16px;">Your role has been updated from <strong>{{ old_role }}</strong> to <strong>{{ new_role }}</strong></p>
+</div>
+
+<div class="message">
+    <p>Your role in the organization "<strong>{{ organization_name }}</strong>" has been updated by {{ actor_name }}.</p>
+    
+    <p>Your new permissions and access level are now active. You can access your updated dashboard to see what's available to you with your new role.</p>
+</div>
+
+{% elif notification_type == "variables_imported" %}
+<div style="background: linear-gradient(135deg, #38b2ac 0%, #319795 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">📥 Variables Imported</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} imported variables into <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>New environment variables have been imported into your project:</p>
+    <ul style="color: #4a5568; line-height: 1.8;">
+        <li><strong>{{ imported_count }}</strong> variables imported successfully</li>
+        {% if overwritten_count %}
+        <li><strong>{{ overwritten_count }}</strong> existing variables were updated</li>
+        {% endif %}
+        <li>Environment: <strong>{{ environment_name }}</strong></li>
+    </ul>
+</div>
+
+{% else %}
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+    <h2 style="margin: 0 0 10px 0; font-size: 20px;">📄 Project Update</h2>
+    <p style="margin: 0; font-size: 16px;">{{ actor_name }} made changes to <strong>{{ project_name }}</strong></p>
+</div>
+
+<div class="message">
+    <p>There has been an update to your project <strong>{{ project_name }}</strong>.</p>
+    {% if description %}
+    <p>{{ description }}</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="info-box">
+    <div class="info-box-title">📋 Project Details</div>
+    <div class="info-box-text">
+        <p><strong>Project:</strong> {{ project_name }}</p>
+        <p><strong>Organization:</strong> {{ organization_name }}</p>
+        <p><strong>Action by:</strong> {{ actor_name }}</p>
+        <p><strong>Date:</strong> {{ timestamp|date:"F j, Y \a\t g:i A" }}</p>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="{{ project_url }}" class="cta-button">
+        🔗 View Project
+    </a>
+</div>
+
+<div class="divider"></div>
+
+<div style="text-align: center; color: #4a5568; font-size: 14px;">
+    <p>Want to manage your notification preferences?</p>
+    <a href="{{ settings_url }}" style="color: #667eea; text-decoration: none;">Update Email Settings</a>
+</div>
+
+<div style="text-align: center; margin-top: 20px; padding: 15px; background-color: #f7fafc; border-radius: 8px;">
+    <p style="color: #4a5568; font-size: 13px; margin: 0;">
+        💡 <strong>Stay in the loop:</strong> These notifications help you keep track of important changes to your projects and maintain security awareness.
+    </p>
+</div>
+{% endblock %}

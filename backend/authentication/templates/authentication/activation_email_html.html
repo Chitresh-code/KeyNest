@@ -1,0 +1,51 @@
+{% extends "authentication/base_email.html" %}
+
+{% block title %}Welcome to KeyNest - Activate Your Account{% endblock %}
+
+{% block content %}
+<div class="greeting">
+    Hello {{ user.first_name|default:user.username }}! 👋
+</div>
+
+<div class="message">
+    <p><strong>Welcome to KeyNest!</strong></p>
+    
+    <p>Thank you for joining our secure environment variable management platform. We're excited to have you on board!</p>
+    
+    <p>To get started and unlock all the powerful features KeyNest has to offer, please activate your account by clicking the button below:</p>
+</div>
+
+<div style="text-align: center;">
+    <a href="{{ activation_url }}" class="cta-button">
+        🚀 Activate My Account
+    </a>
+</div>
+
+<div class="info-box">
+    <div class="info-box-title">⏰ Important Security Notice</div>
+    <div class="info-box-text">
+        <p><strong>This activation link will expire in 24 hours</strong> for your security. If you don't activate your account within this time, you'll need to register again.</p>
+        <p>If you didn't create an account with KeyNest, please ignore this email. Your email address will not be added to our system.</p>
+    </div>
+</div>
+
+<div class="message">
+    <h3 style="color: #667eea; margin-top: 30px;">🎯 What you can do with KeyNest:</h3>
+    <ul style="color: #4a5568; line-height: 2;">
+        <li><strong>🏢 Create Organizations</strong> - Set up teams and invite colleagues</li>
+        <li><strong>📋 Manage Projects</strong> - Organize your applications and services</li>
+        <li><strong>🔐 Store Variables Securely</strong> - Keep your environment variables encrypted and safe</li>
+        <li><strong>📤 Import/Export</strong> - Easy backup and migration of your configurations</li>
+        <li><strong>👥 Team Collaboration</strong> - Share and manage access with your team members</li>
+    </ul>
+</div>
+
+<div class="divider"></div>
+
+<div style="text-align: center; color: #4a5568; font-size: 14px;">
+    <p>Having trouble clicking the button? Copy and paste this link into your browser:</p>
+    <p style="word-break: break-all; color: #667eea; font-family: monospace; background-color: #f7fafc; padding: 10px; border-radius: 4px;">
+        {{ activation_url }}
+    </p>
+</div>
+{% endblock %}

@@ -48,16 +48,27 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-def send_direct_email(subject, message, recipient_email, from_email=None):
+def send_direct_email(subject, message, recipient_email, from_email=None, html_message=None):
     """
     Send email directly via SMTP (bypasses Celery for reliable delivery).
+    Supports both plain text and HTML messages.
     """
     try:
         import smtplib
         from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
         from django.conf import settings
         
-        msg = MIMEText(message, 'plain', 'utf-8')
+        # Create message
+        if html_message:
+            msg = MIMEMultipart('alternative')
+            text_part = MIMEText(message, 'plain', 'utf-8')
+            html_part = MIMEText(html_message, 'html', 'utf-8')
+            msg.attach(text_part)
+            msg.attach(html_part)
+        else:
+            msg = MIMEText(message, 'plain', 'utf-8')
+        
         msg['Subject'] = subject
         msg['From'] = from_email or settings.DEFAULT_FROM_EMAIL
         msg['To'] = recipient_email
@@ -74,6 +85,60 @@ def send_direct_email(subject, message, recipient_email, from_email=None):
     except Exception as e:
         logger.error(f"Failed to send direct email to {recipient_email}: {str(e)}")
         return False
+
+
+def send_html_email(template_name, context, subject, recipient_email, from_email=None):
+    """
+    Send HTML email using Django template.
+    """
+    try:
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+        
+        # Add common context variables
+        context.update({
+            'site_name': getattr(settings, 'SITE_NAME', 'KeyNest'),
+            'current_year': timezone.now().year,
+        })
+        
+        # Render HTML template
+        html_message = render_to_string(template_name, context)
+        
+        # Create a simple text version
+        text_message = f"""
+{subject}
+
+Hello {context.get('user', {}).get('first_name') or context.get('user', {}).get('username', '')},
+
+{context.get('message', 'Please check your email for important information.')}
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+If you need help, please contact our support team.
+
+© {timezone.now().year} KeyNest Team
+        """.strip()
+        
+        return send_direct_email(
+            subject=subject,
+            message=text_message,
+            recipient_email=recipient_email,
+            from_email=from_email,
+            html_message=html_message
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to render HTML email template {template_name}: {str(e)}")
+        # Fallback to simple text email
+        return send_direct_email(
+            subject=subject,
+            message=f"Hello,\n\n{context.get('message', 'Please check your account.')}\n\nBest regards,\nThe KeyNest Team",
+            recipient_email=recipient_email,
+            from_email=from_email
+        )
 
 
 def get_client_ip(request) -> str:
@@ -228,13 +293,8 @@ def register(request):
                 activation_token = default_token_generator.make_token(user)
                 activation_uid = urlsafe_base64_encode(force_bytes(user.pk))
                 
-                # Send activation email (direct SMTP - reliable delivery)
-                from django.template.loader import render_to_string
-                import smtplib
-                from email.mime.text import MIMEText
-                
+                # Send activation email with beautiful HTML template
                 try:
-                    # Create email content using the simple template
                     context = {
                         'user': {
                             'first_name': user.first_name,
@@ -250,21 +310,17 @@ def register(request):
                         'uid': activation_uid,
                     }
                     
-                    email_content = render_to_string('authentication/activation_email.html', context)
+                    success = send_html_email(
+                        template_name='authentication/activation_email_html.html',
+                        context=context,
+                        subject=f"🚀 Activate Your {settings.SITE_NAME} Account",
+                        recipient_email=user.email
+                    )
                     
-                    # Send directly via SMTP (same method that works)
-                    msg = MIMEText(email_content, 'plain', 'utf-8')
-                    msg['Subject'] = f"Activate Your {settings.SITE_NAME} Account"
-                    msg['From'] = settings.DEFAULT_FROM_EMAIL
-                    msg['To'] = user.email
-                    
-                    server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
-                    server.starttls()
-                    server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-                    server.send_message(msg)
-                    server.quit()
-                    
-                    logger.info(f"Activation email sent successfully to {user.email}")
+                    if success:
+                        logger.info(f"Activation email sent successfully to {user.email}")
+                    else:
+                        logger.error(f"Failed to send activation email to {user.email}")
                     
                 except Exception as email_error:
                     # Log email error but don't fail registration
@@ -434,12 +490,8 @@ def password_reset_request(request):
             reset_token = default_token_generator.make_token(user)
             reset_uid = urlsafe_base64_encode(force_bytes(user.pk))
             
-            # Send reset email (direct SMTP - reliable delivery)
+            # Send password reset email with beautiful HTML template
             try:
-                from django.template.loader import render_to_string
-                import smtplib
-                from email.mime.text import MIMEText
-                
                 context = {
                     'user': {
                         'first_name': user.first_name,
@@ -455,41 +507,17 @@ def password_reset_request(request):
                     'uid': reset_uid,
                 }
                 
-                # Create a simple password reset template content
-                email_content = f"""Hello {user.first_name or user.username},
-
-You have requested to reset your password for your {settings.SITE_NAME} account.
-
-To reset your password, please click the link below:
-
-{context['reset_url']}
-
-If you did not request a password reset, please ignore this email. Your password will remain unchanged.
-
-This password reset link will expire in 24 hours for security reasons.
-
-Best regards,
-The {settings.SITE_NAME} Team
-
----
-This is an automated message, please do not reply to this email.
-If you need help, please contact our support team.
-
-© {settings.SITE_NAME} Team"""
+                success = send_html_email(
+                    template_name='authentication/password_reset_email_html.html',
+                    context=context,
+                    subject=f"🔑 Reset Your {settings.SITE_NAME} Password",
+                    recipient_email=user.email
+                )
                 
-                # Send directly via SMTP
-                msg = MIMEText(email_content, 'plain', 'utf-8')
-                msg['Subject'] = f"Reset Your {settings.SITE_NAME} Password"
-                msg['From'] = settings.DEFAULT_FROM_EMAIL
-                msg['To'] = user.email
-                
-                server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
-                server.starttls()
-                server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-                server.send_message(msg)
-                server.quit()
-                
-                logger.info(f"Password reset email sent successfully to {user.email}")
+                if success:
+                    logger.info(f"Password reset email sent successfully to {user.email}")
+                else:
+                    logger.error(f"Failed to send password reset email to {user.email}")
                 
             except Exception as email_error:
                 logger.error(f"Failed to send password reset email to {user.email}: {str(email_error)}")

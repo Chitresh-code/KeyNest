@@ -32,15 +32,26 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-def send_direct_email(subject, message, recipient_email, from_email=None):
+def send_direct_email(subject, message, recipient_email, from_email=None, html_message=None):
     """
     Send email directly via SMTP (bypasses Celery for reliable delivery).
+    Supports both plain text and HTML messages.
     """
     try:
         import smtplib
         from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
         
-        msg = MIMEText(message, 'plain', 'utf-8')
+        # Create message
+        if html_message:
+            msg = MIMEMultipart('alternative')
+            text_part = MIMEText(message, 'plain', 'utf-8')
+            html_part = MIMEText(html_message, 'html', 'utf-8')
+            msg.attach(text_part)
+            msg.attach(html_part)
+        else:
+            msg = MIMEText(message, 'plain', 'utf-8')
+        
         msg['Subject'] = subject
         msg['From'] = from_email or settings.DEFAULT_FROM_EMAIL
         msg['To'] = recipient_email
@@ -57,6 +68,60 @@ def send_direct_email(subject, message, recipient_email, from_email=None):
     except Exception as e:
         logger.error(f"Failed to send direct email to {recipient_email}: {str(e)}")
         return False
+
+
+def send_html_email(template_name, context, subject, recipient_email, from_email=None):
+    """
+    Send HTML email using Django template.
+    """
+    try:
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+        
+        # Add common context variables
+        context.update({
+            'site_name': getattr(settings, 'SITE_NAME', 'KeyNest'),
+            'current_year': timezone.now().year,
+        })
+        
+        # Render HTML template
+        html_message = render_to_string(template_name, context)
+        
+        # Create a simple text version
+        text_message = f"""
+{subject}
+
+Hello {context.get('user', {}).get('first_name') or context.get('user', {}).get('username', '')},
+
+{context.get('message', 'Please check your email for important information.')}
+
+Best regards,
+The KeyNest Team
+
+---
+This is an automated message, please do not reply to this email.
+If you need help, please contact our support team.
+
+© {timezone.now().year} KeyNest Team
+        """.strip()
+        
+        return send_direct_email(
+            subject=subject,
+            message=text_message,
+            recipient_email=recipient_email,
+            from_email=from_email,
+            html_message=html_message
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to render HTML email template {template_name}: {str(e)}")
+        # Fallback to simple text email
+        return send_direct_email(
+            subject=subject,
+            message=f"Hello,\n\n{context.get('message', 'Please check your account.')}\n\nBest regards,\nThe KeyNest Team",
+            recipient_email=recipient_email,
+            from_email=from_email
+        )
 
 
 class BaseKeyNestViewSet(viewsets.ModelViewSet):
@@ -235,33 +300,26 @@ class OrganizationViewSet(BaseKeyNestViewSet):
                     expires_at=expires_at
                 )
                 
-                # Send invitation email directly
+                # Send invitation email with beautiful HTML template
                 invitation_url = f"http://localhost:3000/accept-invitation/{invitation_token}"
-                email_subject = f"Invitation to join {organization.name} on KeyNest"
-                email_message = f"""Hello,
-
-You have been invited by {request.user.get_full_name() or request.user.username} to join the organization "{organization.name}" on KeyNest.
-
-To accept this invitation and join the organization, please click the link below:
-
-{invitation_url}
-
-Important: This invitation will expire in 7 days. If you don't accept the invitation within this time, you'll need to request a new one.
-
-If you don't have a KeyNest account, you'll be able to create one when you accept this invitation.
-
-Best regards,
-The KeyNest Team
-
----
-This is an automated message, please do not reply to this email.
-If you need help, please contact our support team.
-
-© KeyNest Team"""
                 
-                send_direct_email(
-                    subject=email_subject,
-                    message=email_message,
+                context = {
+                    'user': {
+                        'first_name': '',
+                        'username': email.split('@')[0],
+                        'email': email,
+                    },
+                    'organization_name': organization.name,
+                    'organization_description': organization.description,
+                    'invited_by_name': request.user.get_full_name() or request.user.username,
+                    'invitation_url': invitation_url,
+                    'role': role,
+                }
+                
+                success = send_html_email(
+                    template_name='core/organization_invitation_email_html.html',
+                    context=context,
+                    subject=f"🏢 Invitation to join {organization.name} on KeyNest",
                     recipient_email=email
                 )
                 
@@ -469,24 +527,27 @@ If you need help, please contact our support team.
                 member_membership.save()
                 
                 # Send notification to the user whose role was changed
-                email_subject = f"Role updated in {organization.name}"
-                email_message = f"""Hello {member_membership.user.get_full_name() or member_membership.user.username},
-
-Your role in the organization "{organization.name}" has been updated from {old_role} to {new_role} by {request.user.get_full_name() or request.user.username}.
-
-You can now access KeyNest to see your updated permissions.
-
-Best regards,
-The KeyNest Team
-
----
-This is an automated message, please do not reply to this email.
-
-© KeyNest Team"""
+                context = {
+                    'user': {
+                        'first_name': member_membership.user.first_name,
+                        'username': member_membership.user.username,
+                        'email': member_membership.user.email,
+                    },
+                    'notification_type': 'role_updated',
+                    'organization_name': organization.name,
+                    'project_name': organization.name,  # Using org name for project name context
+                    'actor_name': request.user.get_full_name() or request.user.username,
+                    'old_role': old_role,
+                    'new_role': new_role,
+                    'project_url': f"http://localhost:3000/dashboard",
+                    'settings_url': f"http://localhost:3000/settings",
+                    'timestamp': timezone.now(),
+                }
                 
-                send_direct_email(
-                    subject=email_subject,
-                    message=email_message,
+                success = send_html_email(
+                    template_name='core/project_notification_email_html.html',
+                    context=context,
+                    subject=f"🔄 Role updated in {organization.name}",
                     recipient_email=member_membership.user.email
                 )
                 
@@ -601,26 +662,26 @@ This is an automated message, please do not reply to this email.
             with transaction.atomic():
                 # Send notification to the removed user
                 removed_user = User.objects.get(id=user_id)
-                email_subject = f"Removed from {organization.name}"
-                email_message = f"""Hello {removed_user.get_full_name() or removed_user.username},
-
-You have been removed from the organization "{organization.name}" by {request.user.get_full_name() or request.user.username}.
-
-You no longer have access to this organization's projects and environments.
-
-If you believe this was done in error, please contact the organization administrator.
-
-Best regards,
-The KeyNest Team
-
----
-This is an automated message, please do not reply to this email.
-
-© KeyNest Team"""
                 
-                send_direct_email(
-                    subject=email_subject,
-                    message=email_message,
+                context = {
+                    'user': {
+                        'first_name': removed_user.first_name,
+                        'username': removed_user.username,
+                        'email': removed_user.email,
+                    },
+                    'notification_type': 'member_removed',
+                    'organization_name': organization.name,
+                    'project_name': organization.name,  # Using org name for project name context
+                    'actor_name': request.user.get_full_name() or request.user.username,
+                    'project_url': f"http://localhost:3000/dashboard",
+                    'settings_url': f"http://localhost:3000/settings",
+                    'timestamp': timezone.now(),
+                }
+                
+                success = send_html_email(
+                    template_name='core/project_notification_email_html.html',
+                    context=context,
+                    subject=f"👋 Removed from {organization.name}",
                     recipient_email=removed_user.email
                 )
                 
@@ -718,24 +779,25 @@ class ProjectViewSet(BaseKeyNestViewSet):
             ).exclude(user=self.request.user).select_related('user')
             
             for membership in organization_members:
-                email_subject = f"New project created: {project.name}"
-                email_message = f"""Hello {membership.user.get_full_name() or membership.user.username},
-
-A new project "{project.name}" has been created by {self.request.user.get_full_name() or self.request.user.username} in the organization "{project.organization.name}".
-
-You can now access this project in KeyNest and start managing its environments.
-
-Best regards,
-The KeyNest Team
-
----
-This is an automated message, please do not reply to this email.
-
-© KeyNest Team"""
+                context = {
+                    'user': {
+                        'first_name': membership.user.first_name,
+                        'username': membership.user.username,
+                        'email': membership.user.email,
+                    },
+                    'notification_type': 'project_created',
+                    'organization_name': project.organization.name,
+                    'project_name': project.name,
+                    'actor_name': self.request.user.get_full_name() or self.request.user.username,
+                    'project_url': f"http://localhost:3000/dashboard",
+                    'settings_url': f"http://localhost:3000/settings",
+                    'timestamp': timezone.now(),
+                }
                 
-                send_direct_email(
-                    subject=email_subject,
-                    message=email_message,
+                success = send_html_email(
+                    template_name='core/project_notification_email_html.html',
+                    context=context,
+                    subject=f"🆕 New project created: {project.name}",
                     recipient_email=membership.user.email
                 )
             
@@ -754,24 +816,26 @@ This is an automated message, please do not reply to this email.
                 ).exclude(user=self.request.user).select_related('user')
                 
                 for membership in organization_members:
-                    email_subject = f"Project renamed: {old_name} → {project.name}"
-                    email_message = f"""Hello {membership.user.get_full_name() or membership.user.username},
-
-The project "{old_name}" has been renamed to "{project.name}" by {self.request.user.get_full_name() or self.request.user.username} in the organization "{project.organization.name}".
-
-All environments and variables remain unchanged - only the project name has been updated.
-
-Best regards,
-The KeyNest Team
-
----
-This is an automated message, please do not reply to this email.
-
-© KeyNest Team"""
+                    context = {
+                        'user': {
+                            'first_name': membership.user.first_name,
+                            'username': membership.user.username,
+                            'email': membership.user.email,
+                        },
+                        'notification_type': 'project_renamed',
+                        'organization_name': project.organization.name,
+                        'project_name': project.name,
+                        'old_project_name': old_name,
+                        'actor_name': self.request.user.get_full_name() or self.request.user.username,
+                        'project_url': f"http://localhost:3000/dashboard",
+                        'settings_url': f"http://localhost:3000/settings",
+                        'timestamp': timezone.now(),
+                    }
                     
-                    send_direct_email(
-                        subject=email_subject,
-                        message=email_message,
+                    success = send_html_email(
+                        template_name='core/project_notification_email_html.html',
+                        context=context,
+                        subject=f"🔄 Project renamed: {old_name} → {project.name}",
                         recipient_email=membership.user.email
                     )
             
@@ -789,24 +853,25 @@ This is an automated message, please do not reply to this email.
             ).exclude(user=self.request.user).select_related('user')
             
             for membership in organization_members:
-                email_subject = f"Project deleted: {project_name}"
-                email_message = f"""Hello {membership.user.get_full_name() or membership.user.username},
-
-The project "{project_name}" has been deleted by {self.request.user.get_full_name() or self.request.user.username} from the organization "{organization.name}".
-
-All environments and variables associated with this project have been permanently removed.
-
-Best regards,
-The KeyNest Team
-
----
-This is an automated message, please do not reply to this email.
-
-© KeyNest Team"""
+                context = {
+                    'user': {
+                        'first_name': membership.user.first_name,
+                        'username': membership.user.username,
+                        'email': membership.user.email,
+                    },
+                    'notification_type': 'project_deleted',
+                    'organization_name': organization.name,
+                    'project_name': project_name,
+                    'actor_name': self.request.user.get_full_name() or self.request.user.username,
+                    'project_url': f"http://localhost:3000/dashboard",
+                    'settings_url': f"http://localhost:3000/settings",
+                    'timestamp': timezone.now(),
+                }
                 
-                send_direct_email(
-                    subject=email_subject,
-                    message=email_message,
+                success = send_html_email(
+                    template_name='core/project_notification_email_html.html',
+                    context=context,
+                    subject=f"🗑️ Project deleted: {project_name}",
                     recipient_email=membership.user.email
                 )
             

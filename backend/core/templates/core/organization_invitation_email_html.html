@@ -1,0 +1,70 @@
+{% extends "authentication/base_email.html" %}
+
+{% block title %}KeyNest - Organization Invitation{% endblock %}
+
+{% block content %}
+<div class="greeting">
+    Hello! 🎉
+</div>
+
+<div class="message">
+    <p><strong>You've been invited to join an organization on KeyNest!</strong></p>
+    
+    <p><strong>{{ invited_by_name }}</strong> has invited you to join <strong>{{ organization_name }}</strong> and collaborate on their environment variable management.</p>
+    
+    <p>KeyNest helps teams securely manage and organize their environment variables, configuration files, and sensitive data across different projects and environments.</p>
+</div>
+
+<div style="text-align: center;">
+    <a href="{{ invitation_url }}" class="cta-button">
+        🏢 Accept Invitation
+    </a>
+</div>
+
+<div class="info-box">
+    <div class="info-box-title">📋 Organization Details</div>
+    <div class="info-box-text">
+        <p><strong>Organization:</strong> {{ organization_name }}</p>
+        <p><strong>Invited by:</strong> {{ invited_by_name }}</p>
+        <p><strong>Your role:</strong> {{ role|default:"Team Member" }}</p>
+        {% if organization_description %}
+        <p><strong>Description:</strong> {{ organization_description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="message">
+    <h3 style="color: #667eea; margin-top: 30px;">🚀 What you'll be able to do:</h3>
+    <ul style="color: #4a5568; line-height: 2;">
+        <li><strong>🔐 Access Secure Variables</strong> - View and manage environment variables for the organization's projects</li>
+        <li><strong>👥 Collaborate with Team</strong> - Work together with other team members on shared configurations</li>
+        <li><strong>📋 Manage Projects</strong> - Create and organize different environments (dev, staging, prod)</li>
+        <li><strong>📤 Import/Export</strong> - Share configurations safely across different environments</li>
+        <li><strong>🔍 Audit & Track</strong> - See who changed what and when for complete transparency</li>
+    </ul>
+</div>
+
+<div class="info-box" style="background-color: #f0fff4; border-left-color: #48bb78;">
+    <div class="info-box-title" style="color: #276749;">⏰ Time-Sensitive Invitation</div>
+    <div class="info-box-text" style="color: #2f855a;">
+        <p>This invitation link will expire in 7 days for security reasons.</p>
+        <p>If you already have a KeyNest account, you'll be added to the organization immediately. If not, you'll be guided through a quick account creation process.</p>
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<div style="text-align: center; color: #4a5568; font-size: 14px;">
+    <p>Having trouble with the button? Copy and paste this link into your browser:</p>
+    <p style="word-break: break-all; color: #667eea; font-family: monospace; background-color: #f7fafc; padding: 10px; border-radius: 4px;">
+        {{ invitation_url }}
+    </p>
+</div>
+
+<div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #fffbf0; border-radius: 8px; border-left: 4px solid: #f6ad55;">
+    <p style="color: #c6783b; font-weight: 600; margin: 0;">❓ Not interested?</p>
+    <p style="color: #975a16; font-size: 14px; margin: 10px 0 0 0;">
+        You can safely ignore this email if you don't want to join this organization. No account will be created and no further emails will be sent.
+    </p>
+</div>
+{% endblock %}
