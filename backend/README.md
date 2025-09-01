@@ -772,7 +772,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔄 Changelog
 
-### v1.0.0 (Current)
+### v1.1.0 (September 2025)
+
+#### 📧 Beautiful HTML Email System
+- **Modern HTML Email Templates**: Created responsive, professional email templates for all notification types
+- **Enhanced User Experience**: Added emoji icons, gradient styling, and mobile-responsive design
+- **Direct SMTP Integration**: Implemented reliable email delivery bypassing Celery for guaranteed delivery
+- **Multi-format Support**: Both HTML and plain text versions for maximum email client compatibility
+- **Comprehensive Email Coverage**:
+  - User registration and activation emails with welcome messaging
+  - Password reset emails with security warnings and best practices
+  - Organization invitation emails with detailed role information
+  - Project notification emails (member added/removed, project created/renamed/deleted)
+  - Role update notifications with clear permission explanations
+- **Security-First Design**: Clear expiration warnings, security tips, and professional messaging
+- **Production Testing**: Full test coverage with command-line testing and live server validation
+
+#### 🔧 Technical Improvements
+- Enhanced email template architecture with reusable base template
+- Improved error handling and fallback mechanisms for email delivery
+- Updated email context management with dynamic content rendering
+- Refined HTML/CSS for cross-client email compatibility
+
+### v1.0.0 (August 2025)
 
 - Initial release
 - Core environment management
@@ -780,4 +802,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Organization and project management
 - Import/export functionality
 - Comprehensive security features
-- Production-ready deploymen
+- Production-ready deployment

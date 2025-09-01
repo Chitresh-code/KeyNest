@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api/client';
+import { API_CONFIG } from '@/lib/constants';
 import { toast } from 'sonner';
 
 const forgotPasswordSchema = z.object({
@@ -37,7 +38,7 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true);
     try {
-      await api.post('/auth/password-reset/', data);
+      await api.post(API_CONFIG.endpoints.auth.passwordReset, data);
       setIsSubmitted(true);
       toast.success('Password reset instructions sent to your email');
     } catch (error) {

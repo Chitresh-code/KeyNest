@@ -7,6 +7,7 @@ import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api/client';
+import { API_CONFIG } from '@/lib/constants';
 import { toast } from 'sonner';
 
 interface ActivatePageProps {
@@ -39,7 +40,7 @@ export default function ActivatePage({ params }: ActivatePageProps) {
       if (!uid || !token) return;
       
       try {
-        await api.post('/auth/activate/', {
+        await api.post(API_CONFIG.endpoints.auth.activate, {
           uid: uid,
           token: token,
         });

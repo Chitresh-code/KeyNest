@@ -7,6 +7,7 @@ import { Loader2, CheckCircle, AlertCircle, Users, Building } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api/client';
+import { API_CONFIG } from '@/lib/constants';
 import { toast } from 'sonner';
 
 interface AcceptInvitationPageProps {
@@ -43,7 +44,7 @@ export default function AcceptInvitationPage({ params }: AcceptInvitationPagePro
       if (!token) return;
       
       try {
-        const response = await api.post('/auth/invitations/accept/', {
+        const response = await api.post(API_CONFIG.endpoints.auth.invitations.accept, {
           token: token,
         });
         

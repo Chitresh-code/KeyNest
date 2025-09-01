@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api/client';
+import { API_CONFIG } from '@/lib/constants';
 import { toast } from 'sonner';
 
 const resetPasswordSchema = z
@@ -72,7 +73,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
     setError(null);
     
     try {
-      await api.post('/auth/password-reset-confirm/', {
+      await api.post(API_CONFIG.endpoints.auth.passwordResetConfirm, {
         uid: uid,
         token: token,
         new_password: data.new_password,
